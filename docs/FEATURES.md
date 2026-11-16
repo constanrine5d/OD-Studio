@@ -15,7 +15,7 @@ against a real instrument yet (see `README.md`).
 | Original feature | Status | Notes |
 |---|---|---|
 | Open old SOFTmax (DOS-era) `.dat` / `.pro` files | ❌ | No sample files to work from. |
-| Readers other than the SPECTRAmax (Emax, Vmax, UVmax, THERMOmax) | ❌ | Not applicable to the SpectraMax 250; they use a different, older protocol. |
+| Readers other than the SPECTRAmax (Emax, Vmax, UVmax, THERMOmax) | ✅ | Found automatically, or chosen in Preferences › Reader. Not yet tried on real hardware; see [PROTOCOL-TMAX.md](PROTOCOL-TMAX.md). |
 | Normal / Diagnostic / Align popup in Instrument Settings | ❌ | Factory service modes. |
 | Registration dialog, serial-number check | ❌ | Not needed. |
 
@@ -169,7 +169,7 @@ against a real instrument yet (see `README.md`).
 | Original | Status | Here |
 |---|---|---|
 | Serial Port | ✅ | Lists the computer's ports, plus the simulator |
-| Reader | ◐ | SPECTRAmax only |
+| Reader | ✅ | Automatic, SpectraMax 250, ThermoMax, UVmax, Vmax or Emax |
 | Autosave with folder and file prefix | ✅ | Saves `Prefix001.odx`, … after each reading |
 | Autoprint | ✅ | Opens the print window after each reading |
 | Default Protocol | ✅ | |

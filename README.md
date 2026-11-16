@@ -45,6 +45,20 @@ The program opens in your web browser. It runs only on your own computer and not
 anywhere. To try it, choose **Edit › Preferences › Serial Port › Simulator**. **Help › OD Studio
 Help** explains each part.
 
+## Compatible instruments
+
+| Instrument | Status |
+|---|---|
+| **SpectraMax 250** | Supported: the instrument OD Studio is written for (not yet tried on real hardware). |
+| SpectraMax 190, 340 / 340PC / 340PC384, Plus / Plus384, VersaMax | **Possibly.** Same generation of Molecular Devices absorbance readers with the same serial link and, as far as is known, the same command family. Untested; 384-well plates and model-specific extras (e.g. the Plus384 cuvette port) are not supported yet. |
+| SpectraMax M2, M2e, M5, M5e (absorbance only) | Untested. Multi-mode readers; only absorbance reads could work, possibly with changes. |
+| ThermoMax, UVmax, Vmax, Emax | Not yet: older readers that use a different protocol. |
+| Newer readers (SpectraMax ABS, iD3, iD5, i3x, Paradigm…) | Not supported. |
+
+Have one of the "possibly" readers? Please connect it as described below and
+[open an issue](https://github.com/constanrine5d/OD-Studio/issues) with the output of
+`odstudio -v -p PORT info`, whether it works or not.
+
 ## Connect the SpectraMax 250
 
 The reader talks over an **RS-232 serial port** (9600 baud, 8N1; OD Studio sets this itself).

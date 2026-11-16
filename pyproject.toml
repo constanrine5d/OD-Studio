@@ -11,7 +11,7 @@ license = {text = "MIT"}
 requires-python = ">=3.9"
 dependencies = ["pyserial>=3.5"]
 keywords = [
-    "SpectraMax", "SpectraMax 250", "SOFTmax PRO", "microplate reader", "plate reader",
+    "SpectraMax", "SpectraMax 250", "SpectraMax 190", "SpectraMax 340PC", "SpectraMax Plus 384", "VersaMax", "SOFTmax PRO", "microplate reader", "plate reader",
     "absorbance", "optical density", "ELISA", "Bradford", "BCA", "enzyme kinetics", "Vmax",
     "Michaelis-Menten", "4-parameter logistic", "serial", "RS-232", "laboratory", "simulator",
 ]

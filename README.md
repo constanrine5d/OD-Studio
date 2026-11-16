@@ -12,7 +12,8 @@
 
 ---
 
-OD Studio runs absorbance reads on a **SpectraMax 250** plate reader from a current computer and
+OD Studio runs absorbance reads on a **SpectraMax 250** plate reader (and the older **ThermoMax,
+UVmax, Vmax and Emax**) from a current computer and
 analyses them: **endpoint, kinetic and spectrum** reads, Vmax and other kinetic reductions,
 standard curves (linear, 4-parameter logistic, Michaelis–Menten…), ELISA, Bradford, BCA and Lowry
 assay templates, workflows, and export to Excel/CSV. It opens files saved by the original
@@ -52,10 +53,10 @@ Help** explains each part.
 | **SpectraMax 250** | Supported: the instrument OD Studio is written for (not yet tried on real hardware). |
 | SpectraMax 190, 340 / 340PC / 340PC384, Plus / Plus384, VersaMax | **Possibly.** Same generation of Molecular Devices absorbance readers with the same serial link and, as far as is known, the same command family. Untested; 384-well plates and model-specific extras (e.g. the Plus384 cuvette port) are not supported yet. |
 | SpectraMax M2, M2e, M5, M5e (absorbance only) | Untested. Multi-mode readers; only absorbance reads could work, possibly with changes. |
-| ThermoMax, UVmax, Vmax, Emax | Not yet: older readers that use a different protocol. |
+| **ThermoMax, UVmax, Vmax, Emax** | Supported (new, not yet tried on real hardware): the older filter readers. Endpoint reads, kinetic reads (not on the Emax), one filter or a filter with a reference, incubator on the ThermoMax. Enter the reader's filters in **Edit › Preferences › Filters**. |
 | Newer readers (SpectraMax ABS, iD3, iD5, i3x, Paradigm…) | Not supported. |
 
-Have one of the "possibly" readers? Please connect it as described below and
+Have one of the "possibly" readers, or one of the older filter readers? Please connect it as described below and
 [open an issue](https://github.com/constanrine5d/OD-Studio/issues) with the output of
 `odstudio -v -p PORT info`, whether it works or not.
 
@@ -96,6 +97,7 @@ details, run `odstudio -v -p PORT status`, which prints every byte exchanged (se
 - [Command line, Python and simulator](docs/COMMAND_LINE.md): scripted reads, the Python API,
   and a simulator for other programs.
 - [Serial protocol](docs/PROTOCOL.md): how the SpectraMax 250 is driven, with open questions.
+- [Older readers' protocol](docs/PROTOCOL-TMAX.md): ThermoMax, UVmax, Vmax and Emax.
 
 ## Disclaimer
 

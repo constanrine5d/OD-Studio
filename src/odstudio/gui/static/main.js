@@ -160,8 +160,8 @@ function menuDefs() {
       I("Workflow\u2026", cmdWorkflow), "-",
       reading ? I("Stop", () => op("stop"), {key: MOD + "R"}) : I("Read", cmdRead, {key: MOD + "R", enabled: conn}),
       I(S.instrument.drawer === "OPEN" ? "Close Drawer" : "Open Drawer", () => op("drawer"), {enabled: conn && !reading}),
-      I("Incubator…", dlgIncubator, {enabled: conn && !reading}),
-      I("Automix (shake now)", () => op("shake"), {enabled: conn && !reading, checked: S.instrument.shaking}), "-",
+      I("Incubator…", dlgIncubator, {enabled: conn && !reading && canDo("temperature")}),
+      I("Automix (shake now)", () => op("shake"), {enabled: conn && !reading && canDo("shake"), checked: S.instrument.shaking}), "-",
       conn ? I("Disconnect", () => op("disconnect"), {enabled: !reading}) : I("Connect", () => S.prefs.port ? op("connect") : dlgPrefs()),
       I("Instrument Terminal…", dlgTerminal, {enabled: conn && !reading}), I("Instrument Error Log…", dlgErrorLog, {enabled: conn && !reading})]],
   ];
@@ -219,11 +219,11 @@ function renderStatus() {
     h("button", {type: "button", class: "inst " + (i.connected ? "ok" : "off"), title: i.connected ? `Connected on ${i.port}. Firmware: ${i.version}` : (i.error || "Click to choose the serial port"),
       onclick: () => i.connected ? dlgAbout() : dlgPrefs()},
       h("span", {class: "dot"}), i.connected ? (i.model || "SpectraMax") : "No instrument"),
-    h("div", {class: "temp", title: "Temperature in the plate chamber"}, h("b", {}, temp), " °C", i.setpoint > 0 ? h("span", {class: "muted"}, ` → ${i.setpoint.toFixed(1)}`) : null),
+    canDo("temperature") ? h("div", {class: "temp", title: "Temperature in the plate chamber"}, h("b", {}, temp), " °C", i.setpoint > 0 ? h("span", {class: "muted"}, ` → ${i.setpoint.toFixed(1)}`) : null) : null,
     r ? h("button", {type: "button", class: "read stop", onclick: () => op("stop")}, "Stop")
       : h("button", {type: "button", class: "read primary", disabled: !i.connected, onclick: cmdRead}, "Read"),
-    h("button", {type: "button", disabled: !i.connected || !!r, onclick: dlgIncubator, title: "Incubator"}, "Incubator" + (i.setpoint > 0 ? " On" : "")),
-    h("button", {type: "button", class: i.shaking ? "on" : "", disabled: !i.connected || !!r, onclick: () => op("shake"), title: "Shake the plate now"}, i.shaking ? "Stop Mixing" : "Automix"),
+    canDo("temperature") ? h("button", {type: "button", disabled: !i.connected || !!r, onclick: dlgIncubator, title: "Incubator"}, "Incubator" + (i.setpoint > 0 ? " On" : "")) : null,
+    canDo("shake") ? h("button", {type: "button", class: i.shaking ? "on" : "", disabled: !i.connected || !!r, onclick: () => op("shake"), title: "Shake the plate now"}, i.shaking ? "Stop Mixing" : "Automix") : null,
     h("button", {type: "button", disabled: !i.connected || !!r, onclick: () => op("drawer")}, i.drawer === "OPEN" ? "Close Drawer" : "Open Drawer"),
     r && r.workflow ? h("div", {class: "progress", role: "status"}, h("span", {}, `Workflow${S.workflow && S.workflow.cycle ? ", cycle " + S.workflow.cycle : ""}: ${r.id ? `reading ${r.name} ${r.got} of ${r.total}` : (r.wait || r.phase)}`))
     : r ? h("div", {class: "progress", role: "status"}, h("span", {}, `${r.phase} ${r.name}: ${r.got} of ${r.total}` + (r.wait ? ` (${r.wait})` : "")), h("progress", {max: r.total, value: r.got}))

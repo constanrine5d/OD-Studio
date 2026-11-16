@@ -22,12 +22,15 @@ odstudio -p sim read endpoint -w 405 650
 
 ## Command line
 
-Give the port with `-p`, or set the environment variable `ODSTUDIO_PORT`.
+Give the port with `-p`, or set the environment variable `ODSTUDIO_PORT`. The reader type is
+found automatically; `--reader thermomax|uvmax|vmax|emax|spectramax` sets it. The older filter
+readers need their filters by wheel position: `--filters 405,450,490,0,570,650` (0 = empty).
 
 | Port | Meaning |
 |---|---|
 | `COM3`, `/dev/ttyUSB0`, `/dev/cu.usbserial-…` | serial port (`odstudio ports` lists them) |
-| `sim`, `sim:realtime`, `sim:faithful` | built-in simulator |
+| `sim`, `sim:realtime`, `sim:faithful` | built-in SpectraMax 250 simulator |
+| `sim:thermomax`, `sim:uvmax`, `sim:vmax`, `sim:emax` | simulated older filter readers (add `:realtime` for real timing) |
 | `socket://host:port` | TCP, e.g. a serial-to-Ethernet box or `odstudio sim` |
 
 | Command | What it does |

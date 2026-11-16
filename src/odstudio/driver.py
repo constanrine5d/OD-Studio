@@ -22,6 +22,7 @@ from . import protocol as P
 from .errors import (CommandFailed, ProtocolError, ReplyTimeout, SpectraMaxError,
                      TransportError)
 from .protocol import Options, PlateData, Status
+from .readers import capabilities
 from .transport import DEFAULT_BAUD, Transport, open_transport
 
 # SOFTmax PRO waits 60 "ticks" of 16 ms between bytes (seg68:17f3), 6 ticks
@@ -127,6 +128,14 @@ class SpectraMax:
         self.connected = False
         self.remote = False
         self.time_offset = 0.0   # wall clock minus instrument clock, set by a read
+
+    @property
+    def capabilities(self) -> dict:
+        """What this reader can do (see :mod:`odstudio.readers`)."""
+        o = self.info.options
+        return capabilities(o.name or "SpectraMax 250", family="spectramax",
+                            max_wavelengths=MAX_WAVELENGTHS, wl_min=o.wavelength_min,
+                            wl_max=o.wavelength_max, temp_min=o.temp_min, temp_max=o.temp_max)
 
     # ------------------------------------------------------------ lifecycle
     def __enter__(self) -> "SpectraMax":

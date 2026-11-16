@@ -175,53 +175,67 @@ async function dlgInstrument(id) {
   const presets = S.prefs.wavelength_presets, filters = (S.prefs.filters || []).filter(Boolean);
   const body = h("div", {class: "form"});
   const opt = S.instrument.options || {wl_min: 250, wl_max: 750};
-  let wls = st.wavelengths.slice();
+  const caps = readerCaps();                       // null: no reader connected, allow everything
+  const maxWl = caps ? caps.max_wavelengths : 6;
+  let wls = st.wavelengths.slice(0, Math.max(1, maxWl));
+  if (caps && caps.filters && caps.filters.length) wls = wls.map(w => caps.filters.includes(+String(w).replace(/^F/i, "")) ? +String(w).replace(/^F/i, "") : caps.filters[0]);
   const timing = h("p", {class: "hint timing", "aria-live": "polite"});
   const updTiming = () => {
     st.wavelengths = wls;
-    const one = readSeconds(st), cols = colsOf(st), n = cols.length, spanN = st.last_col - st.first_col + 1;
+    const tm = caps && caps.family === "tmax";
+    const one = tm ? (wls.length === 2 ? 10 : 5) : readSeconds(st), cols = colsOf(st), n = cols.length, spanN = st.last_col - st.first_col + 1;
+    const minInt = tm ? (wls.length === 2 ? 14 : 6) + (st.mix_between && caps.shake ? (wls.length === 2 ? 5 : 3) : 0) : one;
     let strips = n === 12 ? "Read entire plate" : `Read column${n > 1 ? "s" : ""} ${colsText(cols)} (${n * 8} wells)`;
-    if (n < spanN) strips += `. The reader sweeps columns ${st.first_col}\u2013${st.last_col} in one pass; the ${spanN - n} in between are left out of the data`;
+    if (tm && n < 12) strips += `. The ${caps.model} reads the whole plate; the other columns are left out of the data`;
+    else if (n < spanN) strips += `. The reader sweeps columns ${st.first_col}\u2013${st.last_col} in one pass; the ${spanN - n} in between are left out of the data`;
     let t = `${strips}.  One read takes about ${one} s.`;
-    if (st.mode === "kinetic") t += `  Minimum interval: ${one} s` + (st.interval < one ? "  — the interval is too short." : ".");
+    if (st.mode === "kinetic") t += `  Minimum interval: ${minInt} s` + (st.interval < minInt ? "  — the interval is too short." : ".");
     timing.textContent = t;
-    timing.classList.toggle("bad", st.mode === "kinetic" && st.interval < one);
+    timing.classList.toggle("bad", st.mode === "kinetic" && st.interval < minInt);
   };
   const draw = () => {
     const mode = st.mode;
     const dl = h("datalist", {id: "wlpresets"}, presets.map(w => h("option", {value: w})), filters.map(f => h("option", {value: "F" + f}, "filter " + f + " nm")));
     const wlBox = h("div", {class: "row wrap"});
+    const fixed = caps && caps.filters && caps.filters.length ? caps.filters : null;
     wls.forEach((w, i) => wlBox.append(h("label", {class: "mini"}, "λ" + (i + 1) + " ",
-      textInput(w, {list: "wlpresets", class: "narrow", inputmode: "numeric", "aria-label": "Wavelength " + (i + 1),
-        onchange: e => { const v = e.target.value.trim().toUpperCase(); wls[i] = /^F/.test(v) ? v : +v; updTiming(); }}), " nm")));
+      fixed
+        ? select(fixed, +String(w).replace(/^F/i, ""), {"aria-label": "Filter " + (i + 1), onchange: e => { wls[i] = +e.target.value; updTiming(); }})
+        : textInput(w, {list: "wlpresets", class: "narrow", inputmode: "numeric", "aria-label": "Wavelength " + (i + 1),
+            onchange: e => { const v = e.target.value.trim().toUpperCase(); wls[i] = /^F/.test(v) ? v : +v; updTiming(); }}), " nm")));
+    const noMode = m => caps && !caps.modes.includes(m) ? `The ${caps.model} cannot do ${m} reads` : null;
     const reads = st.interval > 0 ? Math.floor(st.run_time / st.interval) + 1 : 2;
     fill(body, dl,
-      h("fieldset", {}, h("legend", {}, "Mode"), radios("mode", [["endpoint", "Endpoint"], ["kinetic", "Kinetic"], ["spectrum", "Spectrum"]], mode, v => { st.mode = v; draw(); })),
+      caps ? h("p", {class: "hint"}, `Connected reader: ${caps.model}. Settings it cannot do are greyed out.`) : null,
+      caps && caps.filters && !caps.filters.length ? h("p", {class: "hint bad"}, `The ${caps.model} reads through its filters only. Enter them in Edit › Preferences › Filters first.`) : null,
+      h("fieldset", {}, h("legend", {}, "Mode"), radios("mode", [["endpoint", "Endpoint", noMode("endpoint")], ["kinetic", "Kinetic", noMode("kinetic")], ["spectrum", "Spectrum", noMode("spectrum")]], mode, v => { st.mode = v; draw(); }),
+        noMode(mode) ? h("p", {class: "hint bad"}, noMode(mode) + ". Choose another mode.") : null),
       mode === "spectrum"
         ? h("fieldset", {}, h("legend", {}, "Wavelengths"), h("div", {class: "row wrap"},
             field("Start:", numInput(st.start, {class: "narrow", step: 1, onchange: e => { st.start = +e.target.value; updTiming(); }}), "nm"),
             field("Stop:", numInput(st.stop, {class: "narrow", step: 1, onchange: e => { st.stop = +e.target.value; }}), "nm"),
             field("Step:", numInput(st.step, {class: "narrow", step: 1, min: 1, onchange: e => { st.step = +e.target.value; }}), "nm")))
         : h("fieldset", {}, h("legend", {}, "Wavelengths"),
-            field("Number:", select([1, 2, 3, 4, 5, 6], wls.length, {onchange: e => { const n = +e.target.value; while (wls.length < n) wls.push(presets[wls.length] || 405); wls = wls.slice(0, n); draw(); }})),
-            wlBox, h("p", {class: "hint"}, `Range ${opt.wl_min}–${opt.wl_max} nm` + (filters.length ? `. Installed filters: ${filters.map(f => "F" + f).join(", ")}` : ""))),
+            field("Number:", select([1, 2, 3, 4, 5, 6].slice(0, maxWl), wls.length, {onchange: e => { const n = +e.target.value; while (wls.length < n) wls.push(fixed ? fixed[Math.min(wls.length, fixed.length - 1)] : presets[wls.length] || 405); wls = wls.slice(0, n); draw(); }})),
+            wlBox, h("p", {class: "hint"}, fixed ? `Filters in the ${caps.model}: ${fixed.join(", ")} nm` + (maxWl === 2 ? ". With two, the second is the reference wavelength." : ".")
+              : `Range ${opt.wl_min}–${opt.wl_max} nm` + (filters.length ? `. Installed filters: ${filters.map(f => "F" + f).join(", ")}` : ""))),
       mode === "kinetic" ? h("fieldset", {}, h("legend", {}, "Timing"), h("div", {class: "row wrap"},
           field("Run Time:", textInput(fmtTime(st.run_time), {class: "narrow", onchange: e => { const v = parseTime(e.target.value); if (Number.isFinite(v)) st.run_time = v; draw(); }}), "h:mm:ss"),
           field("Interval:", textInput(fmtTime(st.interval), {class: "narrow", onchange: e => { const v = parseTime(e.target.value); if (Number.isFinite(v)) st.interval = v; draw(); }}), "m:ss")),
           h("p", {class: "hint"}, reads + " Readings")) : null,
       h("fieldset", {}, h("legend", {}, "Strips"), stripPicker(st, updTiming),
-        h("p", {class: "hint"}, "Drag across the plate (or the column numbers) to choose columns. Shift-click extends the choice; " + (MOD === "\u2318" ? "\u2318" : "Ctrl") + "-click or drag adds or removes columns, so they need not be next to each other. Fewer columns allow a shorter kinetic interval."), timing),
-      h("fieldset", {}, h("legend", {}, "Auto Mix"), h("div", {class: "row wrap"},
+        h("p", {class: "hint"}, "Drag across the plate (or the column numbers) to choose columns. Shift-click extends the choice; " + (MOD === "\u2318" ? "\u2318" : "Ctrl") + "-click or drag adds or removes columns, so they need not be next to each other." + (caps && caps.family === "tmax" ? "" : " Fewer columns allow a shorter kinetic interval.")), timing),
+      caps && !caps.shake ? null : h("fieldset", {}, h("legend", {}, "Auto Mix"), h("div", {class: "row wrap"},
           check("Before First Read", st.mix_before, {onchange: e => { st.mix_before = e.target.checked; }}),
           numInput(st.mix_before_s, {class: "narrow", min: 1, step: 1, "aria-label": "Seconds before first read", onchange: e => { st.mix_before_s = +e.target.value; }}), "secs"),
         mode === "kinetic" ? h("div", {class: "row wrap"},
           check("Between Reads", st.mix_between, {onchange: e => { st.mix_between = e.target.checked; updTiming(); }}),
           numInput(st.mix_between_s, {class: "narrow", min: 1, step: 1, "aria-label": "Seconds between reads", onchange: e => { st.mix_between_s = +e.target.value; updTiming(); }}), "secs") : null),
       h("fieldset", {}, h("legend", {}, "Options"),
-        check("Auto Calibrate", st.autocalibrate, {onchange: e => { st.autocalibrate = e.target.checked; updTiming(); }}),
+        caps && !caps.calibrate ? null : check("Auto Calibrate", st.autocalibrate, {onchange: e => { st.autocalibrate = e.target.checked; updTiming(); }}),
         mode !== "spectrum" ? check("Pre-Read Plate (blank each well with its own first reading)", st.pre_read, {onchange: e => { st.pre_read = e.target.checked; }}) : null),
       h("fieldset", {}, h("legend", {}, "Start"),
-        check("Wait until the incubator reaches its set point", st.wait_temp, {onchange: e => { st.wait_temp = e.target.checked; }}),
+        caps && !caps.temperature ? null : check("Wait until the incubator reaches its set point", st.wait_temp, {onchange: e => { st.wait_temp = e.target.checked; }}),
         h("div", {class: "row wrap"}, "Start reading", numInput(st.delay, {class: "narrow", min: 0, step: 1, "aria-label": "Delay before reading", onchange: e => { st.delay = +e.target.value || 0; }}), "seconds after pressing Read")));
     updTiming();
   };
@@ -231,6 +245,13 @@ async function dlgInstrument(id) {
       st.wavelengths = wls;
       return dlgOp("instrument_settings", {id, settings: st}, "Delete");
     }}], {cls: "wide"});
+}
+
+/* Capabilities of the connected reader (see odstudio/readers.py), or null when none is connected. */
+const canDo = what => { const c = readerCaps(); return !c || !!c[what]; };
+function readerCaps() {
+  const i = S.instrument;
+  return i && i.connected && i.options && i.options.modes ? i.options : null;
 }
 
 async function dlgIncubator() {
@@ -245,7 +266,8 @@ async function dlgIncubator() {
 async function dlgPrefs() {
   const P = Object.assign({}, S.prefs);
   const ports = (await op("ports", {}, {quiet: true}) || {ports: []}).ports;
-  const portOpts = [["", "(not connected)"], ["sim", "Simulator (no instrument needed)"], ["sim:realtime", "Simulator, realistic timing"]]
+  const portOpts = [["", "(not connected)"], ["sim", "Simulator (no instrument needed)"], ["sim:realtime", "Simulator, realistic timing"],
+    ["sim:thermomax", "Simulator: ThermoMax"], ["sim:vmax", "Simulator: Vmax"], ["sim:uvmax", "Simulator: UVmax"], ["sim:emax", "Simulator: Emax"]]
     .concat(ports.map(p => [p.device, p.device + (p.description && p.description !== "n/a" ? " — " + p.description : "")]));
   if (P.port && !portOpts.some(o => o[0] === P.port)) portOpts.push([P.port, P.port]);
   const port = select(portOpts, P.port);
@@ -267,9 +289,10 @@ async function dlgPrefs() {
   const chk = k => { const c = check("", P[k]); c.box.addEventListener("change", () => { P[k] = c.box.checked; }); return c.box; };
   const lay = radios("lay", [["time", "Time (one line per reading)"], ["plate", "Plate (8 × 12 blocks)"]], P.export_layout);
   const presets = P.wavelength_presets.map(w => numInput(w, {class: "narrow", step: 1}));
-  const filt = [0, 1, 2, 3, 4, 5].map(i => numInput((P.filters || [])[i] || "", {class: "narrow", step: 1, placeholder: "none", "aria-label": "Filter " + (i + 1)}));
+  const filt = [0, 1, 2, 3, 4, 5].map(i => numInput((P.filters || [])[i] || "", {class: "narrow", step: 1, placeholder: "none", "aria-label": "Filter position " + (i + 1)}));
+  const reader = select([["auto", "Automatic"], ["spectramax", "SpectraMax 250"], ["thermomax", "ThermoMax"], ["uvmax", "UVmax"], ["vmax", "Vmax"], ["emax", "Emax"]], P.reader || "auto", {"aria-label": "Reader type"});
   const body = h("div", {class: "form"},
-    h("fieldset", {}, h("legend", {}, "Instrument"), field("Reader:", h("span", {}, "SPECTRAmax 250")), field("Serial Port:", port), custom,
+    h("fieldset", {}, h("legend", {}, "Instrument"), field("Reader:", reader, "Automatic finds out which reader is connected"), field("Serial Port:", port), custom,
       h("label", {class: "check"}, chk("autoconnect"), " Connect when the program starts"),
       h("label", {class: "check"}, chk("open_drawer_after_read"), " Open the drawer when a reading finishes")),
     h("fieldset", {}, h("legend", {}, "After a reading"),
@@ -296,13 +319,13 @@ async function dlgPrefs() {
     h("fieldset", {}, h("legend", {}, "Export format"), lay, h("label", {class: "check"}, chk("export_labels"), " Include Labels")),
     h("fieldset", {}, h("legend", {}, "Wavelength shortcuts"), h("div", {class: "row wrap"}, presets), h("p", {class: "hint"}, "Offered in the Instrument Settings wavelength boxes.")),
     h("fieldset", {}, h("legend", {}, "Filters"), h("div", {class: "row wrap"}, filt.map((f, i) => h("label", {class: "mini"}, (i + 1) + ": ", f))),
-      h("p", {class: "hint"}, "Optical filters installed in the reader, in nm. They appear as F405 and so on in the wavelength boxes. Leave empty if none.")));
+      h("p", {class: "hint"}, "Filters in the reader's filter wheel, in nm, by position 1–6. ThermoMax, UVmax, Vmax and Emax readers need these: they read only through their filters and cannot report which are fitted. For a SpectraMax they are optional and appear as F405 and so on in the wavelength boxes. Leave empty positions blank.")));
   return modal("Preferences", body, [{label: "Cancel", value: null}, {label: "OK", primary: true, action: () => {
     Object.assign(P, {auto_export_folder: xfolder.value, auto_export_name: xname.value.trim() || "{experiment}_{plate}_{date}_{time}",
       auto_export_format: xfmt.value, auto_export_content: xcontent.value});
     Object.assign(P, {port: custom.value.trim() || port.value, autosave_folder: folder.value, autosave_prefix: prefix.value,
       default_protocol_path: proto.value, assays_folder: assays.value, export_layout: lay.value(),
-      wavelength_presets: presets.map(i => +i.value).filter(Boolean), filters: filt.map(i => +i.value).filter(Boolean)});
+      wavelength_presets: presets.map(i => +i.value).filter(Boolean), filters: filt.map(i => +i.value || 0), reader: reader.value});
     return dlgOp("prefs", P);
   }}], {cls: "wide"});
 }

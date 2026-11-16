@@ -190,8 +190,9 @@ function select(options, value, attrs) {
 }
 function radios(name, options, value, onchange) {
   const box = h("div", {class: "radios", role: "radiogroup"});
-  for (const [v, label] of options) {
-    box.append(h("label", {class: "check"}, h("input", {type: "radio", name, value: v, checked: v === value, onchange: () => onchange && onchange(v)}), " " + label));
+  for (const [v, label, disabled] of options) {      // disabled: optional reason shown as a tooltip
+    box.append(h("label", {class: "check" + (disabled ? " off" : ""), title: disabled || null},
+      h("input", {type: "radio", name, value: v, checked: v === value, disabled: !!disabled, onchange: () => onchange && onchange(v)}), " " + label));
   }
   box.value = () => (box.querySelector("input:checked") || {}).value;
   return box;

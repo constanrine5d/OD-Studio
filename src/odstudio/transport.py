@@ -3,7 +3,9 @@
 Port strings understood by :func:`open_transport`:
 
 ``sim`` / ``sim:faithful`` / ``sim:realtime``
-    the built-in simulator, no hardware needed
+    the built-in SpectraMax 250 simulator, no hardware needed
+``sim:thermomax`` / ``sim:uvmax`` / ``sim:vmax`` / ``sim:emax`` (``:realtime`` may be added)
+    a simulated older filter reader (:mod:`odstudio.tmaxsim`)
 ``COM3``, ``/dev/ttyUSB0``, ``/dev/cu.usbserial-1420`` ...
     a serial port (9600 8N1, as SOFTmax PRO opens it)
 ``socket://host:port``, ``rfc2217://host:port``, ``loop://`` ...
@@ -38,6 +40,9 @@ class Transport:
 
     def close(self) -> None:
         pass
+
+    def send_break(self, duration: float = 0.06) -> None:
+        """Hold the line in BREAK for ``duration`` seconds (used to resynchronise old readers)."""
 
     name = "?"
 
@@ -91,6 +96,12 @@ class SerialTransport(Transport):
         except Exception:
             pass
 
+    def send_break(self, duration: float = 0.06) -> None:
+        try:
+            self._ser.send_break(duration)
+        except Exception as e:
+            raise TransportError(f"{self.name}: {e}") from e
+
 
 class SimulatorTransport(Transport):
     """The simulator wired directly to the driver, no OS resources involved."""
@@ -122,6 +133,13 @@ def open_transport(port: str, baudrate: int = DEFAULT_BAUD, **kw) -> Transport:
     p = port.strip()
     if p.lower() == "sim" or p.lower().startswith("sim:"):
         opts = {o for o in p.lower().split(":")[1:] if o}
+        from .tmaxsim import MODELS as TMAX_MODELS, TMaxSimTransport
+        old = opts & set(TMAX_MODELS)
+        if old:
+            unknown = opts - old - {"realtime"}
+            if len(old) > 1 or unknown:
+                raise TransportError(f"unknown simulator option(s): {', '.join(sorted(opts))}")
+            return TMaxSimTransport(old.pop(), realtime="realtime" in opts)
         unknown = opts - {"faithful", "realtime"}
         if unknown:
             raise TransportError(f"unknown simulator option(s): {', '.join(sorted(unknown))}")

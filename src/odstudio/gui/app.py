@@ -24,6 +24,8 @@ from ..driver import ReadSettings, SpectraMax
 from ..errors import SpectraMaxError
 from ..fits import FIT_KINDS, FIT_LABELS
 from ..formula import FUNCTIONS, check as check_formula
+from ..readers import READER_KINDS, open_reader, unsupported
+from ..tmax import min_interval as tmax_min_interval
 from ..transport import list_ports
 
 DATA_EXT = ".odx"
@@ -119,7 +121,7 @@ def config_dir() -> Path:
 def default_prefs() -> dict:
     docs = Path.home() / "Documents" / "OD Studio"
     return {
-        "port": "", "autoconnect": True,
+        "port": "", "reader": "auto", "autoconnect": True,
         "autosave": False, "autosave_folder": str(docs), "autosave_prefix": "Data",
         "autoprint": False,
         "default_protocol": False, "default_protocol_path": "",
@@ -143,6 +145,7 @@ class Instrument:
         self.on_lost: Optional[Callable[[str], None]] = None
         self.lock = threading.RLock()
         self.sm: Optional[SpectraMax] = None
+        self.reader_options: Callable[[], dict] = lambda: {}
         self.info = {"connected": False, "port": "", "model": "", "version": "", "error": "",
                      "temperature": None, "setpoint": 0.0, "drawer": "", "state": "",
                      "options": None, "shaking": False}
@@ -156,20 +159,17 @@ class Instrument:
         if not port:
             return
         with self.lock:
-            sm = SpectraMax(port)
             try:
-                info = sm.connect(display=("Remote Control", ""))
+                sm = open_reader(port, display=("Remote Control", ""), **self.reader_options())
             except SpectraMaxError as e:
-                sm.disconnect()
                 self.info.update(connected=False, port=port, error=str(e))
                 self.changed()
                 raise UserError(str(e)) from None
+            info = sm.info
             self.sm = sm
-            o = info.options
-            self.info.update(connected=True, port=port, model=info.model, version=info.version,
-                             error="", shaking=False,
-                             options={"wl_min": o.wavelength_min, "wl_max": o.wavelength_max,
-                                      "temp_min": o.temp_min, "temp_max": o.temp_max})
+            caps = sm.capabilities
+            self.info.update(connected=True, port=port, model=info.model or caps["model"],
+                             version=info.version, error="", shaking=False, options=caps)
             self._refresh()
         self.changed()
 
@@ -215,6 +215,21 @@ class Instrument:
                     self.changed()
             finally:
                 self.lock.release()
+
+    def check(self, rs: ReadSettings) -> None:
+        """Refuse a read the connected reader cannot do; drop extras it lacks (shaking, calibration)."""
+        if self.sm is not None:
+            caps = self.sm.capabilities
+            why = unsupported(caps, rs)
+            if why:
+                raise UserError(why)
+            if not caps["shake"]:
+                rs.shake_before = rs.shake_between = 0
+            if not caps["calibrate"]:
+                rs.autocalibrate = False
+
+    def can(self, what: str) -> bool:
+        return self.sm is None or bool(self.sm.capabilities.get(what))
 
     def need(self) -> SpectraMax:
         if self.sm is None:
@@ -305,6 +320,8 @@ class App:
         self._next_doc = 1
         self.clip: dict = {}
         self.inst = Instrument(self._bump)
+        self.inst.reader_options = lambda: {"kind": self.prefs.get("reader", "auto"),
+                                            "filters": self.prefs.get("filters") or []}
         self.inst.on_lost = lambda msg: self.activity(f"Lost contact with the instrument: {msg}")
         self.workflow = W.Runner(self)
         self.activity(f"OD Studio {__version__} started")
@@ -864,11 +881,21 @@ class App:
             raise UserError(f"Unknown preference {sorted(unknown)[0]}")
         if "autosave_prefix" in changes and re.search(r'[\\/:*?"<>|]', changes["autosave_prefix"]):
             raise UserError("Invalid character in autosave file prefix.")
-        if "filters" in changes:
-            changes["filters"] = [int(w) for w in changes["filters"] if w][:6]
+        if "filters" in changes:          # by filter-wheel position 1..6; 0 = empty position
+            try:
+                f = [int(w or 0) for w in changes["filters"]][:6]
+            except (TypeError, ValueError):
+                raise UserError("Filters must be wavelengths in nm.") from None
+            if any(w and not 200 <= w <= 1000 for w in f):
+                raise UserError("Filters must be between 200 and 1000 nm.")
+            changes["filters"] = f
+        if "reader" in changes and changes["reader"] not in READER_KINDS:
+            raise UserError("Unknown reader type.")
         if "wavelength_presets" in changes:
             changes["wavelength_presets"] = [int(w) for w in changes["wavelength_presets"] if w][:6]
-        port_changed = "port" in changes and changes["port"] != self.prefs["port"]
+        port_changed = any(k in changes and changes[k] != self.prefs[k] for k in ("port", "reader")) or (
+            "filters" in changes and changes["filters"] != self.prefs["filters"]
+            and self.inst.info.get("options", {}) and (self.inst.info["options"] or {}).get("family") == "tmax")
         if port_changed:
             self._busy()
         self.prefs.update(changes)
@@ -910,8 +937,9 @@ class App:
             raise UserError(str(e)[0].upper() + str(e)[1:] + ".") from None
         if st["mode"] == "kinetic" and st["run_time"] < st["interval"]:
             raise UserError("Run time is less than interval.")
-        if st["mode"] == "kinetic" and st["interval"] < D.read_seconds(st):
-            raise UserError(f"Read interval is too short. Minimum {D.read_seconds(st)} seconds.")
+        need = self.min_interval(st)
+        if st["mode"] == "kinetic" and st["interval"] < need:
+            raise UserError(f"Read interval is too short. Minimum {need} seconds.")
         st["delay"] = max(0, int(st.get("delay") or 0))
         st["wait_temp"] = bool(st.get("wait_temp"))
         changed = any(st[k] != plate["settings"].get(k) for k in st)
@@ -925,6 +953,13 @@ class App:
                 plate["preread"] = None
             plate["settings"] = st
         self.edit(run)
+
+    def min_interval(self, st: dict) -> int:
+        """Shortest kinetic interval for these settings on the connected reader."""
+        caps = self.inst.info.get("options") if self.inst.info.get("connected") else None
+        if caps and caps.get("family") == "tmax":
+            return tmax_min_interval(len(st["wavelengths"]) == 2, bool(st.get("mix_between")) and caps["shake"])
+        return D.read_seconds(st)
 
     @staticmethod
     def _read_settings(st: dict, preread: bool = False) -> ReadSettings:
@@ -1329,9 +1364,13 @@ class App:
         self.inst.call(lambda sm: sm.open_drawer() if want else sm.close_drawer())
 
     def op_incubator(self, on: bool, temperature: float = 37.0):
+        if not self.inst.can("temperature"):
+            raise UserError(f"The {self.inst.info['model']} has no incubator.")
         self.inst.call(lambda sm: sm.set_temperature(float(temperature) if on else 0))
 
     def op_shake(self, on: Optional[bool] = None):
+        if not self.inst.can("shake"):
+            raise UserError(f"The {self.inst.info['model']} cannot shake the plate.")
         want = (not self.inst.info["shaking"]) if on is None else bool(on)
         self.inst.call(lambda sm: sm.shake(want))
         self.inst.info["shaking"] = want
@@ -1360,6 +1399,7 @@ class App:
         sm = self.inst.need()
         st = plate["settings"]
         rs = self._read_settings(st, preread)
+        self.inst.check(rs)
         key = "preread" if preread else "data"
         if plate.get(key) and not confirm:
             return {"confirm": f"Replace data in “{plate['name']}”?"}

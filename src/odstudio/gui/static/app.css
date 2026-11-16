@@ -163,7 +163,7 @@ legend { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; colo
 .field { display: flex; align-items: center; gap: 8px; } .field.col { flex-direction: column; align-items: stretch; gap: 4px; }
 .field .lbl { min-width: 7.5em; color: var(--muted); } .field input[type=text] { flex: 1; }
 .hint { color: var(--muted); font-size: 12.5px; margin: 0; }
-.check { display: inline-flex; align-items: center; gap: 5px; } .radios { display: flex; gap: 16px; flex-wrap: wrap; }
+.check { display: inline-flex; align-items: center; gap: 5px; } .check.off { opacity: .45; cursor: not-allowed; } .radios { display: flex; gap: 16px; flex-wrap: wrap; }
 .strips { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; } .strip { padding: 10px 0; } .strip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .template .tools { margin-bottom: 8px; } .wellgrid.big .well { min-height: 46px; }
 .tw { display: flex; flex-direction: column; align-items: center; line-height: 1.15; font-size: 11px; } .tw span { color: var(--muted); }

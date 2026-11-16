@@ -23,7 +23,7 @@ listings with the tools in `tools/` (see the end of this file).
 | 63 | `PLATFORM\SERIALCM.CPP` | `CSSerialComm` | Win16 COMM wrapper |
 | 64 | `SOURCES\RDR.CPP` | `CSReader` | facade, instrument detection, vtables |
 | 65 | | `CSReaderInterface`, `CSReaderChore` | base class, 0.64 s poll timer |
-| 66 | `SOURCES\TMAXINTE.CPP` | Tmax/UVmax/Vmax/Emax | older instruments, different protocol |
+| 66 | `SOURCES\TMAXINTE.CPP` | Tmax/UVmax/Vmax/Emax | older instruments, different protocol: [PROTOCOL-TMAX.md](PROTOCOL-TMAX.md) |
 | 68 | `SOURCES\FLASHINT.CPP` | `CSFlashInterface` | **SpectraMax host side** |
 | 69 | | `CSFlashSim` | **built-in instrument simulator** |
 | 70 | `SOURCES\TESTINTR.CPP` | `CSTestInterface` | factory test variant (`CALIGN`, `!ADC_DIAG`) |
@@ -213,7 +213,8 @@ STATUS data (`OPEN`) give the drawer state.
 
 Detection (`64:0cea`): a device that answers `!<CR>` with a block containing `OK` is a
 SpectraMax (type 5). Otherwise the host falls back to the older instruments' echo protocol
-(`VER`, `SHK`): `TH` → ThermoMax, `UV` → UVmax, `Em` → Emax, `SHK` accepted → Vmax.
+(`VER`, `SHK`): `TH` → ThermoMax, `UV` → UVmax, `Em` → Emax, `SHK` accepted → Vmax. The full
+sequence and the older readers' protocol are in [PROTOCOL-TMAX.md](PROTOCOL-TMAX.md).
 
 ## The built-in simulator
 

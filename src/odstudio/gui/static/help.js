@@ -17,8 +17,18 @@ const HELP = [
   ["Connecting the reader", `
 <p>Connect the reader's serial port to the computer. A USB-to-RS-232 adapter works. Then choose the port in Edit &gt; Preferences &gt; Serial Port. The link runs at 9600 baud, 8 data bits, no parity, 1 stop bit.</p>
 <p>The status bar shows a green dot and the instrument name when it is connected. A red dot means no instrument. Hover over it to see why.</p>
-<p>To try the program without a reader, choose <b>Simulator</b> as the port. It answers like a SpectraMax and produces made-up absorbance values. "Simulator, realistic timing" makes reads take as long as a real plate.</p>
+<p>To try the program without a reader, choose <b>Simulator</b> as the port. It answers like a SpectraMax 250 and produces made-up absorbance values (there are simulators of the older readers too). "Simulator, realistic timing" makes reads take as long as a real plate.</p>
 <p>If nothing answers: check that the reader is switched on, then check the cable type (straight-through or null-modem). Control &gt; Instrument Terminal sends raw commands, and Control &gt; Instrument Error Log shows the reader's own errors.</p>`],
+  ["Older readers (ThermoMax, UVmax, Vmax, Emax)", `
+<p>Besides the SpectraMax 250, OD Studio drives the older Molecular Devices filter readers. With <b>Reader: Automatic</b> in Edit &gt; Preferences it finds out which one is connected, as the original program did; you can also choose the type yourself.</p>
+<p>These readers measure through a wheel of up to six filters and cannot tell the computer which are fitted. Enter them in Edit &gt; Preferences &gt; Filters <i>by position</i> (1 to 6), leaving empty positions blank. Instrument Settings then offers only those wavelengths.</p>
+<ul><li><b>Wavelengths</b>: one filter, or a filter with a reference filter. With a reference, the reader subtracts it itself, so each well has one value.</li>
+<li><b>Modes</b>: endpoint on all four; kinetic on the ThermoMax, UVmax and Vmax (not the Emax). No spectrum scans.</li>
+<li><b>Plate</b>: the whole plate is always read; columns you leave out are dropped from the data.</li>
+<li><b>Kinetic</b>: the computer times each read. The shortest interval is 6 s (9 s with mixing between reads), or 14 s (19 s) with a reference filter. A read that would start more than 10% late is skipped and shown as missing.</li>
+<li><b>Incubator</b> (15–42 °C): ThermoMax only. <b>Automix and shaking</b>: not on the Emax.</li>
+<li>There is no error log; refused commands are reported with the reader's error number.</li></ul>
+<p>Support for these readers was worked out from the original program alone and has not yet been tried on a real reader. To try it without one, choose a "Simulator: ThermoMax" (or Vmax, UVmax, Emax) port.</p>`],
   ["Reading a plate", `
 <p>Press <b>Read</b> in the status bar (or Control &gt; Read, ${MOD}R). If the experiment has several plates you are asked which one to read. The default is the active plate, otherwise the first plate without data. Data appears as it arrives. The button becomes <b>Stop</b> while reading.</p>
 <p>Reading again replaces the plate's data after asking. Changing the instrument settings of a plate that already has data deletes the data, also after asking. The template, reduction and graphs can be changed at any time without touching the raw data.</p>

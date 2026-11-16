@@ -143,6 +143,13 @@ class Runner:
             raise ValueError("The workflow has no steps. Add some with the buttons below the timeline.")
         sm = app.inst.need()
         reads = self._plates(steps)
+        for pid in reads:                       # refuse what the connected reader cannot do
+            app.inst.check(app._read_settings(D.section_by_id(ds.doc, pid)["settings"]))
+        model = app.inst.info.get("model") or "reader"
+        for kind, what, ability in (("temperature", "has no incubator", "temperature"),
+                                    ("shake", "cannot shake the plate", "shake")):
+            if any(stp.get("type") == kind for stp in self._flat(steps)) and not app.inst.can(ability):
+                raise ValueError(f"The {model} {what}; remove the {kind} steps from the workflow.")
         with_data = [D.section_by_id(ds.doc, p)["name"] for p in reads if D.section_by_id(ds.doc, p).get("data")]
         if with_data and not confirm:
             return {"confirm": f"The workflow will replace the data in {', '.join(with_data)}. Continue?"}
@@ -186,6 +193,15 @@ class Runner:
         self.ack_event.set()
 
     # ------------------------------------------------------------- engine
+    @staticmethod
+    def _flat(steps) -> list:
+        out = []
+        for st in steps:
+            out.append(st)
+            if st["type"] == "cycle":
+                out += Runner._flat(st["steps"])
+        return out
+
     @staticmethod
     def _plates(steps) -> list:
         out = []

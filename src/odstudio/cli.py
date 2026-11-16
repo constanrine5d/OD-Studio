@@ -9,6 +9,8 @@ import threading
 from . import __version__
 from .driver import ReadSettings, SpectraMax
 from .errors import SpectraMaxError
+from .readers import READER_KINDS, open_reader
+from .tmax import MODEL_NAMES, TMaxReader
 from .export import FORMATS, render
 from .simulator import FlashSimulator
 from .transport import DEFAULT_BAUD, list_ports
@@ -30,10 +32,32 @@ def _connect(args, **kw) -> SpectraMax:
         raise SpectraMaxError(
             f"no port given. Use -p PORT (e.g. -p COM3, -p /dev/ttyUSB0, -p sim) or set "
             f"{ENV_PORT}. 'odstudio ports' lists the serial ports on this computer.")
-    sm = SpectraMax(args.port, baudrate=args.baud, timeout=args.timeout,
-                    trace=_trace if args.verbose else None)
-    sm.connect(**kw)
-    return sm
+    trace = _trace if args.verbose else None
+    kind = getattr(args, "reader", "auto")
+    filters = getattr(args, "filters", None) or ()
+    old_sim = any(o in MODEL_NAMES for o in args.port.lower().split(":")[1:])
+    if kind in MODEL_NAMES or old_sim:
+        return open_reader(args.port, kind=kind if kind in MODEL_NAMES else "auto",
+                           filters=filters, trace=trace)
+    sm = SpectraMax(args.port, baudrate=args.baud, timeout=args.timeout, trace=trace)
+    try:
+        sm.connect(**kw)
+        return sm
+    except SpectraMaxError:
+        sm.disconnect()
+        if kind != "auto":
+            raise
+        try:                       # not a SpectraMax: maybe an older filter reader
+            return _filter_reader(args, filters, trace)
+        except SpectraMaxError:
+            pass
+        raise
+
+
+def _filter_reader(args, filters, trace):
+    r = TMaxReader(args.port, filters=filters, trace=trace)
+    r.connect()
+    return r
 
 
 def _columns(text: str) -> tuple:
@@ -70,16 +94,23 @@ def cmd_ports(args) -> int:
 def cmd_info(args) -> int:
     with _connect(args) as sm:
         o = sm.info.options
+        caps = sm.capabilities
         setpoint, actual = sm.temperature()
         st = sm.status()
         print(f"port         {args.port}")
         print(f"model        {sm.info.model}")
         print(f"firmware     {sm.info.version}")
-        print(f"wavelengths  {o.wavelength_min}-{o.wavelength_max} nm, step {o.wavelength_step}")
-        print(f"incubator    {o.temp_min:g}-{o.temp_max:g} C")
+        if caps["filters"] is None:
+            print(f"wavelengths  {o.wavelength_min}-{o.wavelength_max} nm, step {o.wavelength_step}")
+        else:
+            print(f"filters      {', '.join(str(f) for f in caps['filters']) or 'none given (use --filters)'} nm")
+        print(f"read modes   {', '.join(caps['modes'])}")
+        if caps["temperature"]:
+            print(f"incubator    {o.temp_min:g}-{o.temp_max:g} C")
         if o.extra:
             print(f"timing       {' '.join(o.extra)}")
-        print(f"temperature  {actual:.1f} C (setpoint {'off' if setpoint == 0 else f'{setpoint:.1f} C'})")
+        if caps["temperature"] and actual is not None:
+            print(f"temperature  {actual:.1f} C (setpoint {'off' if setpoint == 0 else f'{setpoint:.1f} C'})")
         print(f"drawer       {st.drawer.lower()}")
         print(f"state        {st.state.lower() or '?'}")
     return 0
@@ -98,6 +129,8 @@ def cmd_temp(args) -> int:
             v = 0.0 if args.value.lower() == "off" else float(args.value)
             sm.set_temperature(v)
         setpoint, actual = sm.temperature()
+        if actual is None:
+            raise SpectraMaxError(f"the {sm.info.model} has no incubator")
         print(f"actual {actual:.1f} C, setpoint {'off' if setpoint == 0 else f'{setpoint:.1f} C'}")
     return 0
 
@@ -173,7 +206,8 @@ def cmd_read(args) -> int:
         raise SpectraMaxError(str(e)) from None
 
     def on_plate(p, i, total):
-        _err(f"read {i}/{total} received (t={p.time_s:g} s, {p.temperature:.1f} C)")
+        t = "" if p.temperature != p.temperature else f", {p.temperature:.1f} C"   # NaN: no sensor
+        _err(f"read {i}/{total} received (t={p.time_s:g} s{t})")
 
     with _connect(args) as sm:
         if args.temp is not None:
@@ -222,7 +256,8 @@ def cmd_sim(args) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="odstudio",
-        description="OD Studio: drive a Molecular Devices SpectraMax 250 plate reader over its serial port.",
+        description="OD Studio: drive a Molecular Devices SpectraMax 250 plate reader (or an older "
+                    "ThermoMax, UVmax, Vmax or Emax) over its serial port.",
         epilog=f"The port can also be given in the environment variable {ENV_PORT}. "
                "Use '-p sim' to try everything without an instrument.")
     p.add_argument("-p", "--port", default=os.environ.get(ENV_PORT) or os.environ.get(OLD_ENV_PORT),
@@ -231,6 +266,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--timeout", type=float, default=1.0,
                    help="seconds to wait between reply bytes (default 1)")
     p.add_argument("-v", "--verbose", action="store_true", help="show every byte sent and received")
+    p.add_argument("--reader", choices=READER_KINDS, default="auto",
+                   help="reader type (default: find out). ThermoMax, UVmax, Vmax and Emax are the "
+                        "older filter readers")
+    p.add_argument("--filters", type=lambda t: [int(x or 0) for x in t.split(",")], default=None,
+                   metavar="NM,NM,...",
+                   help="filter wavelengths by wheel position for the older readers, "
+                        "e.g. 405,450,490,0,570,650 (0 = empty)")
     p.add_argument("--version", action="version", version=f"odstudio {__version__}")
     sub = p.add_subparsers(dest="cmd", metavar="COMMAND")
 

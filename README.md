@@ -58,7 +58,7 @@ are the most trouble-free).
    | System | How to find it | Looks like |
    |---|---|---|
    | Windows | Right-click **Start › Device Manager › Ports (COM & LPT)**: the adapter shows as e.g. *USB Serial Port (COM3)*.<br>Not listed? A ⚠ entry under **Other devices** means the adapter's driver is missing: install it.<br>The number changes with the USB socket, so keep using the same one. | `COM3` |
-   | macOS | In Terminal, run `ls /dev/cu.*` before and after plugging the adapter in: the new entry is the reader.<br>Use the `cu.` name, not `tty.`.<br>Nothing new? Install the driver from the adapter's maker. | `/dev/cu.usbserial-…` |
+   | macOS | In Terminal, run `ls /dev/cu.*` before and after plugging the adapter in: the new entry is the reader.<br>Pick the `cu.` name (there is also a `tty.` one).<br>Nothing new? Install the driver from the adapter's maker. | `/dev/cu.usbserial-…` |
    | Linux | Right after plugging in, `sudo dmesg \| tail` shows *attached to ttyUSB0*.<br>A name that never changes: `ls /dev/serial/by-id/`.<br>Allow access once: `sudo usermod -aG dialout $USER` (`uucp` on Arch), then log out and back in. | `/dev/ttyUSB0` |
 
    **Not sure which one is the reader?** Unplug the adapter and open **Edit › Preferences**: the

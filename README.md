@@ -55,11 +55,11 @@ are the most trouble-free).
    the computer.
 2. Find the port name:
 
-   | System | Where to look | Looks like |
+   | System | How to find it | Looks like |
    |---|---|---|
-   | Windows | Device Manager › Ports (COM & LPT). Install the adapter's driver if it is not listed. | `COM3` |
-   | macOS | Plug the adapter in; recent macOS includes the FTDI driver. Some Prolific adapters need the maker's driver. | `/dev/cu.usbserial-…` |
-   | Linux | Usually works directly. Give your user access once with `sudo usermod -aG dialout $USER` (`uucp` on Arch), then log out and back in. | `/dev/ttyUSB0` |
+   | Windows | Right-click **Start › Device Manager › Ports (COM & LPT)**: the adapter shows as e.g. *USB Serial Port (COM3)*.<br>Not listed? A ⚠ entry under **Other devices** means the adapter's driver is missing: install it.<br>The number changes with the USB socket, so keep using the same one. | `COM3` |
+   | macOS | In Terminal, run `ls /dev/cu.*` before and after plugging the adapter in: the new entry is the reader.<br>Use the `cu.` name, not `tty.`.<br>Nothing new? Install the driver from the adapter's maker. | `/dev/cu.usbserial-…` |
+   | Linux | Right after plugging in, `sudo dmesg \| tail` shows *attached to ttyUSB0*.<br>A name that never changes: `ls /dev/serial/by-id/`.<br>Allow access once: `sudo usermod -aG dialout $USER` (`uucp` on Arch), then log out and back in. | `/dev/ttyUSB0` |
 
    **Not sure which one is the reader?** Unplug the adapter and open **Edit › Preferences**: the
    **Serial Port** list shows the ports the computer has now. Close it, plug the adapter in, and

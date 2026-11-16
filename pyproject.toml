@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "odstudio"
+version = "0.1.0"
+description = "OD Studio: open-source software for the Molecular Devices SpectraMax 250 microplate reader on Windows, macOS and Linux. A modern SOFTmax PRO 1.x replacement with endpoint, kinetic and spectrum reads, curve fits and a built-in instrument simulator."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = ["pyserial>=3.5"]
+keywords = [
+    "SpectraMax", "SpectraMax 250", "SOFTmax PRO", "microplate reader", "plate reader",
+    "absorbance", "optical density", "ELISA", "Bradford", "BCA", "enzyme kinetics", "Vmax",
+    "Michaelis-Menten", "4-parameter logistic", "serial", "RS-232", "laboratory", "simulator",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+
+[project.urls]
+Homepage = "https://github.com/constanrine5d/OD-Studio"
+Issues = "https://github.com/constanrine5d/OD-Studio/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+odstudio = "odstudio.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"odstudio.gui" = ["static/*"]
+"odstudio" = ["protocols/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

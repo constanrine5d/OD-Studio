@@ -1,0 +1,436 @@
+{
+ "format": "odstudio-document",
+ "version": 1,
+ "next_id": 6,
+ "sections": [
+  {
+   "id": 5,
+   "kind": "notes",
+   "report": true,
+   "open": true,
+   "name": "Protocol",
+   "html": "<h2>Michaelis\u2013Menten (Km and Vmax)</h2><p>Each well gets a different substrate concentration. The plate is read kinetically and each well's Vmax becomes one point of the substrate curve; the graph fits v = Vmax\u00b7[S]/(Km + [S]).</p><p><b>Layout.</b> A 2-fold substrate series from 0.0625 to 8 mM across columns 1\u20138, in triplicate (rows A\u2013C). No-substrate wells A9\u2013C9 are the plate blank. Change the series in the template (Series button) so that it spans roughly 0.2 \u00d7 Km to 5 \u00d7 Km.</p><p><b>Results.</b> Km and Vmax with standard errors are in the Substrate table summaries; the graph legend also shows the confidence intervals, and the shaded band is the 95 % confidence band. Fit Options can weight the points or fix a parameter.</p><p>Vmax here is in mOD/min, as measured. To convert to concentration per minute divide by (\u03b5 \u00d7 path length).</p>",
+   "summaries": [],
+   "show_formulas": false
+  },
+  {
+   "id": 1,
+   "kind": "plate",
+   "report": true,
+   "open": true,
+   "name": "Kinetics",
+   "settings": {
+    "mode": "kinetic",
+    "wavelengths": [
+     405
+    ],
+    "run_time": 600,
+    "interval": 20,
+    "first_col": 1,
+    "last_col": 12,
+    "mix_before": false,
+    "mix_before_s": 5,
+    "mix_between": false,
+    "mix_between_s": 3,
+    "autocalibrate": true,
+    "pre_read": false,
+    "start": 350,
+    "stop": 750,
+    "step": 10,
+    "delay": 0,
+    "wait_temp": false,
+    "columns": null
+   },
+   "template": {
+    "A1": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S01",
+     "value": 0.0625
+    },
+    "B1": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S01",
+     "value": 0.0625
+    },
+    "C1": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S01",
+     "value": 0.0625
+    },
+    "A2": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S02",
+     "value": 0.125
+    },
+    "B2": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S02",
+     "value": 0.125
+    },
+    "C2": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S02",
+     "value": 0.125
+    },
+    "A3": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S03",
+     "value": 0.25
+    },
+    "B3": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S03",
+     "value": 0.25
+    },
+    "C3": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S03",
+     "value": 0.25
+    },
+    "A4": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S04",
+     "value": 0.5
+    },
+    "B4": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S04",
+     "value": 0.5
+    },
+    "C4": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S04",
+     "value": 0.5
+    },
+    "A5": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S05",
+     "value": 1.0
+    },
+    "B5": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S05",
+     "value": 1.0
+    },
+    "C5": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S05",
+     "value": 1.0
+    },
+    "A6": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S06",
+     "value": 2.0
+    },
+    "B6": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S06",
+     "value": 2.0
+    },
+    "C6": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S06",
+     "value": 2.0
+    },
+    "A7": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S07",
+     "value": 4.0
+    },
+    "B7": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S07",
+     "value": 4.0
+    },
+    "C7": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S07",
+     "value": 4.0
+    },
+    "A8": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S08",
+     "value": 8.0
+    },
+    "B8": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S08",
+     "value": 8.0
+    },
+    "C8": {
+     "type": "sample",
+     "group": "Substrate",
+     "sample": "S08",
+     "value": 8.0
+    },
+    "A9": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    },
+    "B9": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    },
+    "C9": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    }
+   },
+   "mask": [],
+   "data": null,
+   "preread": null,
+   "reduction": {
+    "wavelength": "!L1",
+    "kinetic": "vmax",
+    "kinetic_formula": "Average(!KinPlot)",
+    "spectrum": "maxlambda",
+    "spectrum_formula": "Max(!KinPlot)",
+    "lag_time": 0,
+    "end_time": null,
+    "min_od": null,
+    "max_od": null,
+    "vmax_points": null,
+    "onset_od": 0.1,
+    "start_nm": null,
+    "end_nm": null,
+    "plate_blank": true,
+    "use_preread": true,
+    "raw_mode": "od",
+    "zero_first": false,
+    "smoothing": 0
+   },
+   "display": {
+    "view": "raw",
+    "type": "number",
+    "low": 0.0,
+    "high": 1.0
+   },
+   "summaries": []
+  },
+  {
+   "id": 4,
+   "kind": "workflow",
+   "report": true,
+   "open": true,
+   "name": "Workflow",
+   "steps": [
+    {
+     "type": "temperature",
+     "celsius": 37,
+     "wait": true,
+     "sid": 1
+    },
+    {
+     "type": "drawer",
+     "open": true,
+     "sid": 2
+    },
+    {
+     "type": "message",
+     "text": "Add enzyme to all wells, put the plate in and press Continue.",
+     "sid": 3
+    },
+    {
+     "type": "drawer",
+     "open": false,
+     "sid": 4
+    },
+    {
+     "type": "read",
+     "plate": 1,
+     "sid": 5
+    }
+   ],
+   "log": [],
+   "next_step": 1
+  },
+  {
+   "id": 2,
+   "kind": "group",
+   "report": true,
+   "open": true,
+   "name": "Substrate",
+   "group": "Substrate"
+  },
+  {
+   "id": 3,
+   "kind": "graph",
+   "report": true,
+   "open": true,
+   "name": "Michaelis-Menten",
+   "plots": [
+    {
+     "name": "MM",
+     "group": "Substrate",
+     "x": "Concentration",
+     "y": "Values",
+     "xerr": null,
+     "yerr": null
+    }
+   ],
+   "fit": "mm",
+   "type": "scatter",
+   "connect": false,
+   "symbols": true,
+   "height": 100,
+   "xaxis": {
+    "auto": true,
+    "min": 0.0,
+    "max": 1.0,
+    "log": false,
+    "grid": false,
+    "ticks": true,
+    "label": "Concentration"
+   },
+   "yaxis": {
+    "auto": true,
+    "min": 0.0,
+    "max": 1.0,
+    "log": false,
+    "grid": false,
+    "ticks": true,
+    "label": "Vmax (mOD/min)"
+   },
+   "fit_options": {
+    "weighting": "none",
+    "conf": 0.95,
+    "bands": true,
+    "fixed": {},
+    "seeds": {}
+   }
+  }
+ ],
+ "groups": {
+  "Substrate": {
+   "name": "Substrate",
+   "descriptor": "Concentration",
+   "units": "mM",
+   "columns": [
+    {
+     "name": "Sample",
+     "formula": "!SampleNames",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Concentration",
+     "formula": "!Concentration",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Wells",
+     "formula": "!WellIDs",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Values",
+     "formula": "!WellValues",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "MeanValue",
+     "formula": "Average(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Std.Dev.",
+     "formula": "Stdev(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "CV%",
+     "formula": "Cv(Values)",
+     "decimals": 1,
+     "hidden": false,
+     "style": {}
+    }
+   ],
+   "summaries": [
+    {
+     "name": "Km",
+     "formula": "EC50(MM@'Michaelis-Menten')",
+     "description": "Km:",
+     "decimals": 4,
+     "hide_name": false,
+     "style": {}
+    },
+    {
+     "name": "KmErr",
+     "formula": "ParmErr(MM@'Michaelis-Menten',\"B\")",
+     "description": "\u00b1",
+     "decimals": 4,
+     "hide_name": false,
+     "style": {}
+    },
+    {
+     "name": "Vmax",
+     "formula": "ParmA(MM@'Michaelis-Menten')",
+     "description": "Vmax (mOD/min):",
+     "decimals": 2,
+     "hide_name": false,
+     "style": {}
+    },
+    {
+     "name": "VmaxErr",
+     "formula": "ParmErr(MM@'Michaelis-Menten',\"A\")",
+     "description": "\u00b1",
+     "decimals": 2,
+     "hide_name": false,
+     "style": {}
+    },
+    {
+     "name": "R2",
+     "formula": "RSquared(MM@'Michaelis-Menten')",
+     "description": "R\u00b2:",
+     "decimals": 4,
+     "hide_name": false,
+     "style": {}
+    }
+   ],
+   "hide_replicates": false,
+   "show_formulas": false,
+   "color": "#4f8ad9"
+  }
+ },
+ "created": 1794856837.0332842
+}

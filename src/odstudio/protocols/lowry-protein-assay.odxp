@@ -1,0 +1,935 @@
+{
+ "format": "odstudio-document",
+ "version": 1,
+ "next_id": 7,
+ "sections": [
+  {
+   "id": 6,
+   "kind": "notes",
+   "report": true,
+   "open": true,
+   "name": "Protocol",
+   "html": "<h2>Lowry protein assay, 750 nm</h2><p>Alkaline copper treatment followed by the Folin\u2013Ciocalteu reagent gives a blue colour read at 750 nm (the top of the SpectraMax 250 range). Typical incubation is 30 minutes at room temperature after adding the Folin reagent. Follow your kit's instructions.</p><p><b>Layout.</b> Standards in rows A\u2013G of columns 1\u20132 (duplicates); buffer blanks in H1\u2013H2, subtracted from every well. Unknowns in duplicate pairs of columns 3\u201312 (Un01 \u2026 Un40); change the template to match your plate.</p><p><b>Results.</b> The Unknowns table interpolates each well on the standard curve (quadratic fit). Adj.Result multiplies by the dilution factor. Values outside the standards are flagged.</p><p><b>Workflow.</b> Run it from the Workflow section to have the reader shake, incubate and read; or just press Read when the plate is ready.</p>",
+   "summaries": [],
+   "show_formulas": false
+  },
+  {
+   "id": 1,
+   "kind": "plate",
+   "report": true,
+   "open": true,
+   "name": "Lowry",
+   "settings": {
+    "mode": "endpoint",
+    "wavelengths": [
+     750
+    ],
+    "run_time": 300,
+    "interval": 30,
+    "first_col": 1,
+    "last_col": 12,
+    "mix_before": false,
+    "mix_before_s": 5,
+    "mix_between": false,
+    "mix_between_s": 3,
+    "autocalibrate": true,
+    "pre_read": false,
+    "start": 350,
+    "stop": 750,
+    "step": 10,
+    "delay": 0,
+    "wait_temp": false,
+    "columns": null
+   },
+   "template": {
+    "A1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std01",
+     "value": 0.0625
+    },
+    "A2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std01",
+     "value": 0.0625
+    },
+    "B1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std02",
+     "value": 0.125
+    },
+    "B2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std02",
+     "value": 0.125
+    },
+    "C1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std03",
+     "value": 0.25
+    },
+    "C2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std03",
+     "value": 0.25
+    },
+    "D1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std04",
+     "value": 0.5
+    },
+    "D2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std04",
+     "value": 0.5
+    },
+    "E1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std05",
+     "value": 0.75
+    },
+    "E2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std05",
+     "value": 0.75
+    },
+    "F1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std06",
+     "value": 1.0
+    },
+    "F2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std06",
+     "value": 1.0
+    },
+    "G1": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std07",
+     "value": 1.5
+    },
+    "G2": {
+     "type": "sample",
+     "group": "Standards",
+     "sample": "Std07",
+     "value": 1.5
+    },
+    "H1": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    },
+    "H2": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    },
+    "A3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un01",
+     "value": 1.0
+    },
+    "A4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un01",
+     "value": 1.0
+    },
+    "B3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un02",
+     "value": 1.0
+    },
+    "B4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un02",
+     "value": 1.0
+    },
+    "C3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un03",
+     "value": 1.0
+    },
+    "C4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un03",
+     "value": 1.0
+    },
+    "D3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un04",
+     "value": 1.0
+    },
+    "D4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un04",
+     "value": 1.0
+    },
+    "E3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un05",
+     "value": 1.0
+    },
+    "E4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un05",
+     "value": 1.0
+    },
+    "F3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un06",
+     "value": 1.0
+    },
+    "F4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un06",
+     "value": 1.0
+    },
+    "G3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un07",
+     "value": 1.0
+    },
+    "G4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un07",
+     "value": 1.0
+    },
+    "H3": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un08",
+     "value": 1.0
+    },
+    "H4": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un08",
+     "value": 1.0
+    },
+    "A5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un09",
+     "value": 1.0
+    },
+    "A6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un09",
+     "value": 1.0
+    },
+    "B5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un10",
+     "value": 1.0
+    },
+    "B6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un10",
+     "value": 1.0
+    },
+    "C5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un11",
+     "value": 1.0
+    },
+    "C6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un11",
+     "value": 1.0
+    },
+    "D5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un12",
+     "value": 1.0
+    },
+    "D6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un12",
+     "value": 1.0
+    },
+    "E5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un13",
+     "value": 1.0
+    },
+    "E6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un13",
+     "value": 1.0
+    },
+    "F5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un14",
+     "value": 1.0
+    },
+    "F6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un14",
+     "value": 1.0
+    },
+    "G5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un15",
+     "value": 1.0
+    },
+    "G6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un15",
+     "value": 1.0
+    },
+    "H5": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un16",
+     "value": 1.0
+    },
+    "H6": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un16",
+     "value": 1.0
+    },
+    "A7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un17",
+     "value": 1.0
+    },
+    "A8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un17",
+     "value": 1.0
+    },
+    "B7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un18",
+     "value": 1.0
+    },
+    "B8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un18",
+     "value": 1.0
+    },
+    "C7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un19",
+     "value": 1.0
+    },
+    "C8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un19",
+     "value": 1.0
+    },
+    "D7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un20",
+     "value": 1.0
+    },
+    "D8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un20",
+     "value": 1.0
+    },
+    "E7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un21",
+     "value": 1.0
+    },
+    "E8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un21",
+     "value": 1.0
+    },
+    "F7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un22",
+     "value": 1.0
+    },
+    "F8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un22",
+     "value": 1.0
+    },
+    "G7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un23",
+     "value": 1.0
+    },
+    "G8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un23",
+     "value": 1.0
+    },
+    "H7": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un24",
+     "value": 1.0
+    },
+    "H8": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un24",
+     "value": 1.0
+    },
+    "A9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un25",
+     "value": 1.0
+    },
+    "A10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un25",
+     "value": 1.0
+    },
+    "B9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un26",
+     "value": 1.0
+    },
+    "B10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un26",
+     "value": 1.0
+    },
+    "C9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un27",
+     "value": 1.0
+    },
+    "C10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un27",
+     "value": 1.0
+    },
+    "D9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un28",
+     "value": 1.0
+    },
+    "D10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un28",
+     "value": 1.0
+    },
+    "E9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un29",
+     "value": 1.0
+    },
+    "E10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un29",
+     "value": 1.0
+    },
+    "F9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un30",
+     "value": 1.0
+    },
+    "F10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un30",
+     "value": 1.0
+    },
+    "G9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un31",
+     "value": 1.0
+    },
+    "G10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un31",
+     "value": 1.0
+    },
+    "H9": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un32",
+     "value": 1.0
+    },
+    "H10": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un32",
+     "value": 1.0
+    },
+    "A11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un33",
+     "value": 1.0
+    },
+    "A12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un33",
+     "value": 1.0
+    },
+    "B11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un34",
+     "value": 1.0
+    },
+    "B12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un34",
+     "value": 1.0
+    },
+    "C11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un35",
+     "value": 1.0
+    },
+    "C12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un35",
+     "value": 1.0
+    },
+    "D11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un36",
+     "value": 1.0
+    },
+    "D12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un36",
+     "value": 1.0
+    },
+    "E11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un37",
+     "value": 1.0
+    },
+    "E12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un37",
+     "value": 1.0
+    },
+    "F11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un38",
+     "value": 1.0
+    },
+    "F12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un38",
+     "value": 1.0
+    },
+    "G11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un39",
+     "value": 1.0
+    },
+    "G12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un39",
+     "value": 1.0
+    },
+    "H11": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un40",
+     "value": 1.0
+    },
+    "H12": {
+     "type": "sample",
+     "group": "Unknowns",
+     "sample": "Un40",
+     "value": 1.0
+    }
+   },
+   "mask": [],
+   "data": null,
+   "preread": null,
+   "reduction": {
+    "wavelength": "!L1",
+    "kinetic": "vmax",
+    "kinetic_formula": "Average(!KinPlot)",
+    "spectrum": "maxlambda",
+    "spectrum_formula": "Max(!KinPlot)",
+    "lag_time": 0,
+    "end_time": null,
+    "min_od": null,
+    "max_od": null,
+    "vmax_points": null,
+    "onset_od": 0.1,
+    "start_nm": null,
+    "end_nm": null,
+    "plate_blank": true,
+    "use_preread": true,
+    "raw_mode": "od",
+    "zero_first": false,
+    "smoothing": 0
+   },
+   "display": {
+    "view": "raw",
+    "type": "number",
+    "low": 0.0,
+    "high": 1.0
+   },
+   "summaries": []
+  },
+  {
+   "id": 5,
+   "kind": "workflow",
+   "report": true,
+   "open": true,
+   "name": "Workflow",
+   "steps": [
+    {
+     "type": "drawer",
+     "open": true,
+     "sid": 1
+    },
+    {
+     "type": "message",
+     "text": "Put the plate with samples and reagent in the drawer, then press Continue.",
+     "sid": 2
+    },
+    {
+     "type": "drawer",
+     "open": false,
+     "sid": 3
+    },
+    {
+     "type": "shake",
+     "seconds": 30,
+     "sid": 4
+    },
+    {
+     "type": "delay",
+     "seconds": 1800,
+     "sid": 5
+    },
+    {
+     "type": "read",
+     "plate": 1,
+     "sid": 6
+    }
+   ],
+   "log": [],
+   "next_step": 1
+  },
+  {
+   "id": 2,
+   "kind": "group",
+   "report": true,
+   "open": true,
+   "name": "Standards",
+   "group": "Standards"
+  },
+  {
+   "id": 3,
+   "kind": "group",
+   "report": true,
+   "open": true,
+   "name": "Unknowns",
+   "group": "Unknowns"
+  },
+  {
+   "id": 4,
+   "kind": "graph",
+   "report": true,
+   "open": true,
+   "name": "Standard Curve",
+   "plots": [
+    {
+     "name": "STD",
+     "group": "Standards",
+     "x": "Concentration",
+     "y": "MeanValue",
+     "xerr": null,
+     "yerr": "Std.Dev."
+    }
+   ],
+   "fit": "quadratic",
+   "type": "scatter",
+   "connect": false,
+   "symbols": true,
+   "height": 100,
+   "xaxis": {
+    "auto": true,
+    "min": 0.0,
+    "max": 1.0,
+    "log": false,
+    "grid": false,
+    "ticks": true,
+    "label": "Concentration"
+   },
+   "yaxis": {
+    "auto": true,
+    "min": 0.0,
+    "max": 1.0,
+    "log": false,
+    "grid": false,
+    "ticks": true,
+    "label": "MeanValue"
+   },
+   "fit_options": {
+    "weighting": "none",
+    "conf": 0.95,
+    "bands": false,
+    "fixed": {},
+    "seeds": {}
+   }
+  }
+ ],
+ "groups": {
+  "Standards": {
+   "name": "Standards",
+   "descriptor": "Concentration",
+   "units": "mg/ml",
+   "columns": [
+    {
+     "name": "Sample",
+     "formula": "!SampleNames",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Concentration",
+     "formula": "!Concentration",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Wells",
+     "formula": "!WellIDs",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Values",
+     "formula": "!WellValues",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "MeanValue",
+     "formula": "Average(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Std.Dev.",
+     "formula": "Stdev(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "CV%",
+     "formula": "Cv(Values)",
+     "decimals": 1,
+     "hidden": false,
+     "style": {}
+    }
+   ],
+   "summaries": [
+    {
+     "name": "MinStd",
+     "formula": "Min(MeanValue)",
+     "description": "Lowest standard:",
+     "decimals": 3,
+     "hide_name": false,
+     "style": {}
+    },
+    {
+     "name": "MaxStd",
+     "formula": "Max(MeanValue)",
+     "description": "Highest standard:",
+     "decimals": 3,
+     "hide_name": false,
+     "style": {}
+    }
+   ],
+   "hide_replicates": false,
+   "show_formulas": false,
+   "color": "#4f8ad9"
+  },
+  "Unknowns": {
+   "name": "Unknowns",
+   "descriptor": "Factor",
+   "units": "",
+   "columns": [
+    {
+     "name": "Sample",
+     "formula": "!SampleNames",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Factor",
+     "formula": "!Factor",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Wells",
+     "formula": "!WellIDs",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Values",
+     "formula": "!WellValues",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "MeanValue",
+     "formula": "Average(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Std.Dev.",
+     "formula": "Stdev(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "CV%",
+     "formula": "Cv(Values)",
+     "decimals": 1,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Result",
+     "formula": "InterpX(STD@'Standard Curve',Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "MeanResult",
+     "formula": "Average(Result)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Adj.Result",
+     "formula": "MeanResult*!Factor",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Range",
+     "formula": "If(MeanValue<MinStd@Standards or MeanValue>MaxStd@Standards,\"outside curve\",\"\")",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    }
+   ],
+   "summaries": [
+    {
+     "name": "Note",
+     "formula": "\"\"",
+     "description": "Adj.Result = MeanResult \u00d7 dilution factor (mg/ml). Set each sample's Factor in the template.",
+     "decimals": 0,
+     "hide_name": true,
+     "style": {}
+    }
+   ],
+   "hide_replicates": false,
+   "show_formulas": false,
+   "color": "#e0823d"
+  }
+ },
+ "created": 1794856837.031859
+}

@@ -1,0 +1,32 @@
+[
+ {
+  "file": "bradford-protein-assay.odxp",
+  "name": "Bradford protein assay",
+  "description": "Coomassie dye binds protein and shifts its absorbance to 595 nm. Typical microplate format: 5 µl of standard or sample plus 250 µl of dye reagent, 10 minutes at room temperature. Follow your reagent supplier's instructions for volumes and timing."
+ },
+ {
+  "file": "bca-protein-assay.odxp",
+  "name": "BCA protein assay",
+  "description": "Protein reduces Cu²⁺ to Cu⁺, which forms a purple complex with bicinchoninic acid (562 nm). Typical microplate format: 25 µl of standard or sample plus 200 µl of working reagent, 30 minutes at 37 °C. Follow your kit's instructions."
+ },
+ {
+  "file": "lowry-protein-assay.odxp",
+  "name": "Lowry protein assay",
+  "description": "Alkaline copper treatment followed by the Folin–Ciocalteu reagent gives a blue colour read at 750 nm (the top of the SpectraMax 250 range). Typical incubation is 30 minutes at room temperature after adding the Folin reagent. Follow your kit's instructions."
+ },
+ {
+  "file": "elisa-tmb-450-nm.odxp",
+  "name": "ELISA (TMB, 450 nm)",
+  "description": "Read after adding acid stop solution to the TMB substrate. The reduction subtracts the 650 nm reading (plate imperfections, scratches) from the 450 nm signal: L1−L2."
+ },
+ {
+  "file": "kinetic-enzyme-assay-vmax.odxp",
+  "name": "Kinetic enzyme assay (Vmax)",
+  "description": "Reads every 20 seconds for 10 minutes and reports Vmax, the steepest slope, in mOD/min. 405 nm suits p-nitrophenol products (for example from pNPP); change the wavelength for other chromophores (340 nm for NADH, read as a decrease)."
+ },
+ {
+  "file": "michaelis-menten-km-vmax.odxp",
+  "name": "Michaelis-Menten (Km, Vmax)",
+  "description": "Each well gets a different substrate concentration. The plate is read kinetically and each well's Vmax becomes one point of the substrate curve; the graph fits v = Vmax·[S]/(Km + [S])."
+ }
+]

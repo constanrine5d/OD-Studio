@@ -1,0 +1,739 @@
+{
+ "format": "odstudio-document",
+ "version": 1,
+ "next_id": 5,
+ "sections": [
+  {
+   "id": 4,
+   "kind": "notes",
+   "report": true,
+   "open": true,
+   "name": "Protocol",
+   "html": "<h2>Kinetic enzyme assay, 405 nm</h2><p>Reads every 20 seconds for 10 minutes and reports Vmax, the steepest slope, in mOD/min. 405 nm suits p-nitrophenol products (for example from pNPP); change the wavelength for other chromophores (340 nm for NADH, read as a decrease).</p><p><b>Layout.</b> 28 samples in triplicate (S01 in A1\u2013A3, S02 in A4\u2013A6 \u2026); no-enzyme controls in H1\u2013H3 are the plate blank, so their background curve is subtracted from every well.</p><p><b>Activity.</b> Activity = rate / (\u03b5 \u00d7 path) \u00d7 dilution, in \u00b5mol/min per ml of sample when \u03b5 is in mM\u207b\u00b9 cm\u207b\u00b9. Edit the Epsilon and Path summaries for your product and well volume (18.5 is p-nitrophenol at alkaline pH; 0.6 cm is roughly 200 \u00b5l in a 96-well plate).</p><p>Check the Well Graph: Vmax, R\u00b2 and Vmax Points per well. Set Lag Time or Vmax Points under Reduction if the start of the curve is not linear.</p>",
+   "summaries": [],
+   "show_formulas": false
+  },
+  {
+   "id": 1,
+   "kind": "plate",
+   "report": true,
+   "open": true,
+   "name": "Kinetics",
+   "settings": {
+    "mode": "kinetic",
+    "wavelengths": [
+     405
+    ],
+    "run_time": 600,
+    "interval": 20,
+    "first_col": 1,
+    "last_col": 12,
+    "mix_before": false,
+    "mix_before_s": 5,
+    "mix_between": false,
+    "mix_between_s": 3,
+    "autocalibrate": true,
+    "pre_read": false,
+    "start": 350,
+    "stop": 750,
+    "step": 10,
+    "delay": 0,
+    "wait_temp": false,
+    "columns": null
+   },
+   "template": {
+    "A1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S01",
+     "value": 1.0
+    },
+    "A2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S01",
+     "value": 1.0
+    },
+    "A3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S01",
+     "value": 1.0
+    },
+    "A4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S02",
+     "value": 1.0
+    },
+    "A5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S02",
+     "value": 1.0
+    },
+    "A6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S02",
+     "value": 1.0
+    },
+    "A7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S03",
+     "value": 1.0
+    },
+    "A8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S03",
+     "value": 1.0
+    },
+    "A9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S03",
+     "value": 1.0
+    },
+    "A10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S04",
+     "value": 1.0
+    },
+    "A11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S04",
+     "value": 1.0
+    },
+    "A12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S04",
+     "value": 1.0
+    },
+    "B1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S05",
+     "value": 1.0
+    },
+    "B2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S05",
+     "value": 1.0
+    },
+    "B3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S05",
+     "value": 1.0
+    },
+    "B4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S06",
+     "value": 1.0
+    },
+    "B5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S06",
+     "value": 1.0
+    },
+    "B6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S06",
+     "value": 1.0
+    },
+    "B7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S07",
+     "value": 1.0
+    },
+    "B8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S07",
+     "value": 1.0
+    },
+    "B9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S07",
+     "value": 1.0
+    },
+    "B10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S08",
+     "value": 1.0
+    },
+    "B11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S08",
+     "value": 1.0
+    },
+    "B12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S08",
+     "value": 1.0
+    },
+    "C1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S09",
+     "value": 1.0
+    },
+    "C2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S09",
+     "value": 1.0
+    },
+    "C3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S09",
+     "value": 1.0
+    },
+    "C4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S10",
+     "value": 1.0
+    },
+    "C5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S10",
+     "value": 1.0
+    },
+    "C6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S10",
+     "value": 1.0
+    },
+    "C7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S11",
+     "value": 1.0
+    },
+    "C8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S11",
+     "value": 1.0
+    },
+    "C9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S11",
+     "value": 1.0
+    },
+    "C10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S12",
+     "value": 1.0
+    },
+    "C11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S12",
+     "value": 1.0
+    },
+    "C12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S12",
+     "value": 1.0
+    },
+    "D1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S13",
+     "value": 1.0
+    },
+    "D2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S13",
+     "value": 1.0
+    },
+    "D3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S13",
+     "value": 1.0
+    },
+    "D4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S14",
+     "value": 1.0
+    },
+    "D5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S14",
+     "value": 1.0
+    },
+    "D6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S14",
+     "value": 1.0
+    },
+    "D7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S15",
+     "value": 1.0
+    },
+    "D8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S15",
+     "value": 1.0
+    },
+    "D9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S15",
+     "value": 1.0
+    },
+    "D10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S16",
+     "value": 1.0
+    },
+    "D11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S16",
+     "value": 1.0
+    },
+    "D12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S16",
+     "value": 1.0
+    },
+    "E1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S17",
+     "value": 1.0
+    },
+    "E2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S17",
+     "value": 1.0
+    },
+    "E3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S17",
+     "value": 1.0
+    },
+    "E4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S18",
+     "value": 1.0
+    },
+    "E5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S18",
+     "value": 1.0
+    },
+    "E6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S18",
+     "value": 1.0
+    },
+    "E7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S19",
+     "value": 1.0
+    },
+    "E8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S19",
+     "value": 1.0
+    },
+    "E9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S19",
+     "value": 1.0
+    },
+    "E10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S20",
+     "value": 1.0
+    },
+    "E11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S20",
+     "value": 1.0
+    },
+    "E12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S20",
+     "value": 1.0
+    },
+    "F1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S21",
+     "value": 1.0
+    },
+    "F2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S21",
+     "value": 1.0
+    },
+    "F3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S21",
+     "value": 1.0
+    },
+    "F4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S22",
+     "value": 1.0
+    },
+    "F5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S22",
+     "value": 1.0
+    },
+    "F6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S22",
+     "value": 1.0
+    },
+    "F7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S23",
+     "value": 1.0
+    },
+    "F8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S23",
+     "value": 1.0
+    },
+    "F9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S23",
+     "value": 1.0
+    },
+    "F10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S24",
+     "value": 1.0
+    },
+    "F11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S24",
+     "value": 1.0
+    },
+    "F12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S24",
+     "value": 1.0
+    },
+    "G1": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S25",
+     "value": 1.0
+    },
+    "G2": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S25",
+     "value": 1.0
+    },
+    "G3": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S25",
+     "value": 1.0
+    },
+    "G4": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S26",
+     "value": 1.0
+    },
+    "G5": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S26",
+     "value": 1.0
+    },
+    "G6": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S26",
+     "value": 1.0
+    },
+    "G7": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S27",
+     "value": 1.0
+    },
+    "G8": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S27",
+     "value": 1.0
+    },
+    "G9": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S27",
+     "value": 1.0
+    },
+    "G10": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S28",
+     "value": 1.0
+    },
+    "G11": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S28",
+     "value": 1.0
+    },
+    "G12": {
+     "type": "sample",
+     "group": "Samples",
+     "sample": "S28",
+     "value": 1.0
+    },
+    "H1": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    },
+    "H2": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    },
+    "H3": {
+     "type": "plateblank",
+     "group": null,
+     "sample": "BL",
+     "value": null
+    }
+   },
+   "mask": [],
+   "data": null,
+   "preread": null,
+   "reduction": {
+    "wavelength": "!L1",
+    "kinetic": "vmax",
+    "kinetic_formula": "Average(!KinPlot)",
+    "spectrum": "maxlambda",
+    "spectrum_formula": "Max(!KinPlot)",
+    "lag_time": 0,
+    "end_time": null,
+    "min_od": null,
+    "max_od": null,
+    "vmax_points": null,
+    "onset_od": 0.1,
+    "start_nm": null,
+    "end_nm": null,
+    "plate_blank": true,
+    "use_preread": true,
+    "raw_mode": "od",
+    "zero_first": false,
+    "smoothing": 0
+   },
+   "display": {
+    "view": "raw",
+    "type": "number",
+    "low": 0.0,
+    "high": 1.0
+   },
+   "summaries": []
+  },
+  {
+   "id": 3,
+   "kind": "workflow",
+   "report": true,
+   "open": true,
+   "name": "Workflow",
+   "steps": [
+    {
+     "type": "temperature",
+     "celsius": 37,
+     "wait": true,
+     "sid": 1
+    },
+    {
+     "type": "drawer",
+     "open": true,
+     "sid": 2
+    },
+    {
+     "type": "message",
+     "text": "Start the reaction (add substrate), put the plate in and press Continue.",
+     "sid": 3
+    },
+    {
+     "type": "drawer",
+     "open": false,
+     "sid": 4
+    },
+    {
+     "type": "read",
+     "plate": 1,
+     "sid": 5
+    }
+   ],
+   "log": [],
+   "next_step": 1
+  },
+  {
+   "id": 2,
+   "kind": "group",
+   "report": true,
+   "open": true,
+   "name": "Samples",
+   "group": "Samples"
+  }
+ ],
+ "groups": {
+  "Samples": {
+   "name": "Samples",
+   "descriptor": "Factor",
+   "units": "",
+   "columns": [
+    {
+     "name": "Sample",
+     "formula": "!SampleNames",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Factor",
+     "formula": "!Factor",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Wells",
+     "formula": "!WellIDs",
+     "decimals": null,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Values",
+     "formula": "!WellValues",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "MeanValue",
+     "formula": "Average(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Std.Dev.",
+     "formula": "Stdev(Values)",
+     "decimals": 3,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "CV%",
+     "formula": "Cv(Values)",
+     "decimals": 1,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Rate (OD/min)",
+     "formula": "MeanValue/1000",
+     "decimals": 5,
+     "hidden": false,
+     "style": {}
+    },
+    {
+     "name": "Activity",
+     "formula": "MeanValue/1000/(Epsilon@Samples*Path@Samples)*!Factor*1000",
+     "decimals": 4,
+     "hidden": false,
+     "style": {}
+    }
+   ],
+   "summaries": [
+    {
+     "name": "Epsilon",
+     "formula": "18.5",
+     "description": "Extinction coefficient (mM\u207b\u00b9 cm\u207b\u00b9) \u2014 edit:",
+     "decimals": 2,
+     "hide_name": false,
+     "style": {}
+    },
+    {
+     "name": "Path",
+     "formula": "0.6",
+     "description": "Light path (cm) for your volume \u2014 edit:",
+     "decimals": 2,
+     "hide_name": false,
+     "style": {}
+    }
+   ],
+   "hide_replicates": false,
+   "show_formulas": false,
+   "color": "#4f8ad9"
+  }
+ },
+ "created": 1794856837.0329988
+}

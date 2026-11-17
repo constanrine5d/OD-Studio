@@ -28,8 +28,40 @@ CSFixedArray of raw ODs per wavelength (index = read number).  Read times are
 not stored: kinetic reads are ``k * interval`` exactly as SOFTmax PRO exports them.
 ``read_at`` is the Mac clock (local wall time) converted as if it were UTC.
 
-Not decoded: curve-fit type and graph styling, column/plate display formats,
-reduction parameters other than the formula strings, well masks.
+CSPlateData (seg 35:187e) ends with 96 per-well flags: the well mask (Plate > Mask,
+CSPlateTable seg 30:0b7e -> CSPlateData 35:2e75/2e9b; index = row * 12 + col + 1),
+returned as ``plate["mask"]`` (well names).  Its byte +0x7f is "Subtract pre-read plate"
+and +0x158 "Switch normal and pre-read".
+
+The plate section then holds CSCalcPlateBody (CSCalcPlateBody::Read seg 25:82e4)::
+
+    long     plate number
+    byte x3  view state
+    short    display type      0 Raw, 1 Number, 2 Plots, 3 Gray Scale, 4 Ranged, 5 Threshold
+    byte     "With reduced number"                      (Display dialog, seg 94)
+    short    wavelength popup  3 Custom, 4 menu item, 5 MaxLambda, 6 MinLambda
+    short    kinetic popup     0 Vmax, 1 Time to Vmax, 2 Onset Time, 3 Custom (menu 7100)
+    long     Vmax points
+    byte     subtract plate blank
+    cstring  custom wavelength formula, chosen wavelength item, custom kinetic formula
+    double   display low, high; 11 doubles (gray-scale levels derived from low/high)
+    long     lag time (s) / spectrum start (nm); long end time (s) / spectrum end (nm)
+    double   min OD, max OD, onset OD
+    byte     relative OD (inverse of "Absolute OD Values"; streams > 1.0.3)
+    CSCalcPlateTable (seg 27:3e3e: plot ranges, not needed)
+
+The popup codes are the menu command - 7100 (seg 90:03ac kinetic dialog, 91:0262 endpoint/
+spectrum dialog); the fields map onto the Reduction dialogs DLOG 7102/7103 (26:09d8, 90:149e,
+90:20f8) and the header text of the plate (25:2e78).  With "relative OD" set, kinetic data are
+taken relative to the first reading (!KinPlot, seg 36:0c75), like OD Studio's zero_first.
+
+A graph section is the pleat body, CSAnalysisGraph::Read (seg 46:0898: plots via
+CSGraphPlot::Read 57:17fe, title, axes, labels, 6 axis flags, 72 bytes, 2 strings, 4 longs)
+and CSGraphBody::Read (48:1ae2): long, short curve fit (0 No Fit, 1 Linear, 2 Semi-Log,
+3 Log-Log, 4 Quadratic, 5 4-Parameter, menu 5010), long.
+
+Not decoded: graph styling (symbols, colours, axis flags), column number formats, the
+CSCalcPlateTable plot ranges and the view-state bytes.
 """
 from __future__ import annotations
 
@@ -393,6 +425,7 @@ def _read_plate_section(s: _Stream, plate: dict, header: dict, warnings: list) -
         return
     pd = _read_plate_data(s)
     plate["settings"] = _settings(pd)
+    plate["mask"] = _mask(pd)
     for k in range(2):          # [0] = the read, [1] = plate pre-read (when pre-read is on)
         cls = s.pstr()
         if not cls:
@@ -402,12 +435,32 @@ def _read_plate_section(s: _Stream, plate: dict, header: dict, warnings: list) -
             return
         data = _descriptor_to_data(_read_descriptor(s, header["old_descriptor"]), pd)
         plate["data" if k == 0 else "preread"] = data
+    start = s.p
     try:
-        red = _read_calc_plate_body(s)
-        if red:
-            plate["reduction"] = red
+        red, display = _read_calc_plate_body(s, MODES.get(pd["mode"], "endpoint"))
     except (ValueError, struct.error, UnicodeDecodeError):
-        pass
+        red, display = None, None
+    if red is None:          # fall back to the formula strings alone
+        try:
+            red = _read_calc_plate_strings(_Stream(s.d, start, s.version))
+        except (ValueError, struct.error, UnicodeDecodeError):
+            red = None
+    if red:
+        red["subtract_preread"] = bool(pd["b7f"])      # CSPlateData +0x7f
+        red["swap_preread"] = bool(pd.get("b158", 0))  # CSPlateData +0x158
+        plate["reduction"] = red
+    if display:
+        plate["display"] = display
+
+
+def _mask(pd: dict) -> list:
+    """Masked wells: CSPlateData +0x82 holds one flag per well, index 1..96 = row * 12 + col + 1.
+
+    Set by Plate > Mask (CSPlateTable::ToggleMask seg 30:0b7e -> CSPlateData seg 35:2e75 get,
+    35:2e9b set); read back as the 96 bytes after the pre-read flags in CSPlateData::Read.
+    """
+    flags = pd.get("well_flags") or []
+    return [f"{'ABCDEFGH'[k // 12]}{k % 12 + 1}" for k, v in enumerate(flags[:96]) if v]
 
 
 # ---------------------------------------------------------------- whole file
@@ -628,7 +681,12 @@ def _read_group_section(s: _Stream, name: str, end: int, warnings: list) -> dict
 
 
 def _read_graph_section(s: _Stream, name: str, end: int, warnings: list) -> dict:
-    """CSGraphSection: plots (x/y formulas) and axes.  Curve-fit settings are not decoded."""
+    """CSGraphSection: pleat body, CSAnalysisGraph::Read (seg 46:0898), CSGraphBody tail.
+
+    The curve fit is a property of the graph (CSGraphBody +0xbe, applied to every plot by
+    CSGraphBody::SetFit seg 48:1899 -> CSPlot::SetFit seg 58:028a); it is returned as
+    ``graph["fit"]`` and copied to each plot.
+    """
     graph: dict = {"name": name, "plots": []}
     _pleat_body(s)
     n = s.long()
@@ -653,11 +711,27 @@ def _read_graph_section(s: _Stream, name: str, end: int, warnings: list) -> dict
     s._take(6)
     graph["x_label"] = s.cstr()
     graph["y_label"] = s.cstr()
+    try:
+        s._take(6)                  # axis flags (log scale per axis, grid, ticks)
+        s._take(72)                 # 6 x 12-byte records (not decoded)
+        s.cstr(); s.cstr()
+        for _ in range(4):
+            s.long()
+        # CSGraphBody::Read (seg 48:1ae2) after the graph: long, short fit, long
+        s.long()
+        code = s.short()
+        s.long()
+    except ValueError:
+        return graph
+    if code in FIT_CODES and s.p <= end:
+        graph["fit"] = FIT_CODES[code]
+        for plot in graph["plots"]:
+            plot["fit"] = graph["fit"]
     return graph
 
 
-def _read_calc_plate_body(s: _Stream) -> Optional[dict]:
-    """Plate reduction settings (CSCalcPlateBody); only the formula strings are decoded."""
+def _read_calc_plate_strings(s: _Stream) -> Optional[dict]:
+    """The three formula strings of CSCalcPlateBody only (fallback when the rest is damaged)."""
     if s.pstr() != "CSCalcPlateBody":
         return None
     s._take(19)
@@ -665,6 +739,71 @@ def _read_calc_plate_body(s: _Stream) -> Optional[dict]:
     if not all(x.isprintable() for x in (a, b, formula)):
         return None
     return {"wavelength_combination": a, "label": b, "formula": formula}
+
+
+# Reduction dialog popups (CSKinReductionDLOG seg 90:03ac, CSNumReductionDLOG seg 91:0262):
+# the stored code is the menu command - 7100.
+WAVELENGTH_CODES = {3: "custom", 4: "named", 5: "maxlambda", 6: "minlambda"}
+KINETIC_CODES = {0: "vmax", 1: "time_to_vmax", 2: "onset", 3: "custom"}      # menu 7100
+# Plate Display dialog (CSPlateDisplayDLOG seg 94:06b0): pictures PctP 7200..7205.
+DISPLAY_CODES = {0: "raw", 1: "number", 2: "plots", 3: "gray", 4: "ranged", 5: "threshold"}
+# Graph fit (CSGraphBody::SetFit seg 48:1899, menu 5010 commands 5500 + code).
+FIT_CODES = {0: "none", 1: "linear", 2: "semilog", 3: "loglog", 4: "quadratic", 5: "4param"}
+
+
+def _num(v: float) -> Optional[float]:
+    v = _clean(v)
+    return None if v is None or abs(v) > 1e30 else v
+
+
+def _read_calc_plate_body(s: _Stream, mode: str = "endpoint"):
+    """CSCalcPlateBody::Read (seg 25:82e4): reduction and display settings of a plate.
+
+    Returns ``(reduction, display)``; ``(None, None)`` when the object is not there or the
+    strings are not text.  Field offsets are those of the in-memory object; the reduction
+    record at +0xca is what the Reduction dialogs edit (compared field by field in 26:0d86)
+    and the display record at +0xc2 is what the Display dialog edits (25:1df2).
+    """
+    if s.pstr() != "CSCalcPlateBody":
+        return None, None
+    s.long()                            # plate number (not used)
+    s.byte(); s.byte(); s.byte()        # +0xa4, +0xa5, +0xa7: view state
+    disp_code = s.short()               # +0xc2 display type (DISPLAY_CODES)
+    with_number = s.byte()              # +0xc4 "With reduced number"
+    wl_code = s.short()                 # +0xca wavelength popup (WAVELENGTH_CODES)
+    kin_code = s.short()                # +0xcc kinetic popup (KINETIC_CODES)
+    vmax_points = s.long()              # +0xce
+    plate_blank = s.byte()              # +0xd2 "Subtract plate blank"
+    wl_formula = s.cstr()               # +0xf8 custom wavelength (or spectrum) formula
+    wl_name = s.cstr()                  # +0xf4 chosen wavelength menu item (L1, L1-L2, MaxLambda...)
+    kin_formula = s.cstr()              # +0xfc custom kinetic formula
+    if not all(x.isprintable() for x in (wl_formula, wl_name, kin_formula)):
+        return None, None
+    low, high = s.double(), s.double()  # +0x134 display low / high limit
+    for _ in range(11):                 # +0x146 gray-scale levels derived from low/high
+        s.double()
+    start = s.long()                    # +0xd4 lag time (s) / spectrum start (nm)
+    end = s.long()                      # +0xd8 end time (s) / spectrum end (nm)
+    min_od, max_od = s.double(), s.double()    # +0xdc, +0xe4 OD limits
+    onset_od = s.double()               # +0xec
+    relative = s.byte() if s.version > 10003 else None   # +0x108 (not "Absolute OD Values")
+    red = {"wavelength_combination": wl_formula, "label": wl_name, "formula": kin_formula,
+           "wavelength_choice": WAVELENGTH_CODES.get(wl_code), "wavelength_name": wl_name,
+           "wavelength_formula": wl_formula, "kinetic_formula": kin_formula,
+           "plate_blank": bool(plate_blank)}
+    if mode == "kinetic":
+        red.update(kinetic=KINETIC_CODES.get(kin_code), vmax_points=vmax_points,
+                   lag_time=start, end_time=end, min_od=_num(min_od), max_od=_num(max_od),
+                   onset_od=_num(onset_od))
+        if relative is not None:
+            red["relative_od"] = bool(relative)
+    elif mode == "spectrum":
+        red.update(start_nm=start, end_nm=end)
+    display = None
+    if disp_code in DISPLAY_CODES:
+        display = {"type": DISPLAY_CODES[disp_code], "with_number": bool(with_number),
+                   "low": _num(low), "high": _num(high)}
+    return red, display
 
 
 # ---------------------------------------------------------------- public API
@@ -676,9 +815,18 @@ def read_pda(path) -> dict:
     Returns ``{"plates": [...], "groups": [...], "notes": [...], "graphs": [...],
     "version": "1.1", "stream_version": "1.0.5", "warnings": [...]}``.  Each plate is
     ``{"name", "settings", "data", "template", "mask"}`` plus optional ``"preread"``
-    (same shape as ``data``) and ``"reduction"``; ``data`` is None in protocols and
-    unread plates, else ``values[read][wavelength][row][col]`` with None for wells
-    that were not read.  Anything that could not be decoded is listed in ``warnings``.
+    (same shape as ``data``), ``"reduction"`` and ``"display"``; ``data`` is None in
+    protocols and unread plates, else ``values[read][wavelength][row][col]`` with None for
+    wells that were not read.  ``mask`` lists masked wells ("A1"...).  ``reduction`` holds
+    the formula strings (``wavelength_combination``, ``label``, ``formula``) and, when the
+    whole object decoded, ``wavelength_choice`` (named/custom/maxlambda/minlambda),
+    ``wavelength_name``, ``wavelength_formula``, ``kinetic_formula``, ``plate_blank``,
+    ``subtract_preread``, ``swap_preread``; kinetic plates add ``kinetic`` (vmax/
+    time_to_vmax/onset/custom), ``vmax_points``, ``lag_time``, ``end_time``, ``min_od``,
+    ``max_od``, ``onset_od``, ``relative_od``; spectrum plates ``start_nm``, ``end_nm``.
+    ``display`` is ``{"type": raw/number/plots/gray/ranged/threshold, "with_number",
+    "low", "high"}``.  Each graph has ``fit`` (none/linear/semilog/loglog/quadratic/4param),
+    also copied to its plots.  Anything that could not be decoded is listed in ``warnings``.
     """
     with open(path, "rb") as f:
         data = f.read()

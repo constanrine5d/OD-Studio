@@ -1458,14 +1458,67 @@ def document_from_legacy(info: dict) -> dict:
             pre["temps"] = (list(pre.get("temps") or []) + [None] * n)[:n]
             s["preread"] = pre
         red = p.get("reduction") or {}
-        combo = (red.get("wavelength_combination") or "").strip()
-        if combo and combo.lower() != "custom":
-            s["reduction"]["wavelength"] = re.sub(r"(?<![!\w])L([1-6])\b", r"!L\1", combo)
-        elif combo.lower() == "custom" and red.get("formula"):
-            s["reduction"]["wavelength"] = red["formula"]
-        if red.get("formula") and combo.lower() != "custom":
-            s["reduction"]["kinetic_formula"] = red["formula"]
-            s["reduction"]["spectrum_formula"] = red["formula"]
+        sr = s["reduction"]
+
+        def lnames(text: str) -> str:
+            return re.sub(r"(?<![!\w])L([1-6])\b", r"!L\1", text)
+
+        choice = red.get("wavelength_choice")
+        if choice:
+            # decoded CSCalcPlateBody: menu choice + custom formulas
+            wl_name = (red.get("wavelength_name") or "").strip()
+            wl_formula = (red.get("wavelength_formula") or "").strip()
+            if st["mode"] == "spectrum":
+                if choice in ("maxlambda", "minlambda"):
+                    sr["spectrum"] = choice
+                elif choice == "custom" and wl_formula:
+                    sr["spectrum"] = "custom"
+                    sr["spectrum_formula"] = lnames(wl_formula)
+            elif choice == "custom" and wl_formula:
+                sr["wavelength"] = lnames(wl_formula)
+            elif choice == "named" and wl_name and wl_name.lower() != "custom":
+                sr["wavelength"] = lnames(wl_name)
+            if st["mode"] == "kinetic":
+                if red.get("kinetic") in KINETIC_KINDS:
+                    sr["kinetic"] = red["kinetic"]
+                if (red.get("kinetic_formula") or "").strip():
+                    sr["kinetic_formula"] = red["kinetic_formula"].strip()
+                for key in ("lag_time", "end_time", "min_od", "max_od", "onset_od"):
+                    if isinstance(red.get(key), (int, float)):
+                        sr[key] = red[key]
+                vp = red.get("vmax_points")
+                sr["vmax_points"] = int(vp) if isinstance(vp, int) and vp >= 2 else None
+                if red.get("relative_od") is not None:
+                    sr["zero_first"] = bool(red["relative_od"])
+            if st["mode"] == "spectrum":
+                for key in ("start_nm", "end_nm"):
+                    if isinstance(red.get(key), (int, float)) and red[key] > 0:
+                        sr[key] = red[key]
+            if red.get("plate_blank") is not None:
+                sr["plate_blank"] = bool(red["plate_blank"])
+            if red.get("subtract_preread") is not None:
+                sr["use_preread"] = bool(red["subtract_preread"])
+        else:
+            # only the formula strings are known
+            combo = (red.get("wavelength_combination") or "").strip()
+            if combo and combo.lower() != "custom":
+                sr["wavelength"] = lnames(combo)
+            elif combo.lower() == "custom" and red.get("formula"):
+                sr["wavelength"] = red["formula"]
+            if red.get("formula") and combo.lower() != "custom":
+                sr["kinetic_formula"] = red["formula"]
+                sr["spectrum_formula"] = red["formula"]
+        disp = p.get("display") or {}
+        dtype = disp.get("type")
+        if dtype in ("raw", "number", "plots", "gray", "ranged", "threshold"):
+            if dtype == "plots" and st["mode"] == "endpoint":
+                dtype = "number"
+            s["display"]["view"] = "raw" if dtype == "raw" else "reduced"
+            if dtype != "raw":
+                s["display"]["type"] = dtype
+            low, high = disp.get("low"), disp.get("high")
+            if isinstance(low, (int, float)) and isinstance(high, (int, float)) and high > low:
+                s["display"]["low"], s["display"]["high"] = float(low), float(high)
         for well, t in (p.get("template") or {}).items():
             try:
                 well_rc(well)

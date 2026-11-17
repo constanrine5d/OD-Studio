@@ -26,7 +26,7 @@ against a real instrument yet (see `README.md`).
 | New (opens another experiment window) | ✅ | File › New; starts from the Default Protocol when one is set |
 | Several experiment windows open at once | ✅ | Tabs, or Window › Side by Side to see them next to each other; each window has its own plates and settings |
 | Open… | ✅ | Opens `.odx` data files, `.odxp` protocols (and `.smx`/`.smxp` from before the rename), exported `.txt` files, **and the original program's `.pda` data and `.ppr` protocol files**, in a new window |
-| Old `.pda` / `.ppr` contents | ◐ | Read: all plates, raw data (checked against the original's exports), pre-reads, instrument settings, templates, groups with their columns and summaries, notes, graph plots and axis labels, wavelength formulas. Not stored or not decoded: the curve-fit type (set to Linear, with a message), kinetic reduction type, display settings, masks. |
+| Old `.pda` / `.ppr` contents | ✅ | Read: all plates, raw data (checked against the original's exports), pre-reads, instrument settings, templates, groups with their columns and summaries, notes, graph plots, axis labels and curve-fit type, wavelength formulas, the full reduction (kinetic type, Vmax points, lag/end time, OD limits, onset OD, plate blank, pre-read, relative OD), plate display type and range, and masked wells. Checked by reproducing the original's stored reduced values. Not read: graph colours and symbols, column number formats (they do not change results). |
 | Close | ✅ | File › Close closes the window (asks to save) |
 | Save, Save As… | ✅ | `.odx` files (plain JSON) |
 | Protocol files (no data) | ✅ | File › Save As Protocol… (`.odxp`) |

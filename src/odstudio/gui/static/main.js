@@ -164,6 +164,7 @@ function menuDefs() {
       I("Automix (shake now)", () => op("shake"), {enabled: conn && !reading && canDo("shake"), checked: S.instrument.shaking}), "-",
       conn ? I("Disconnect", () => op("disconnect"), {enabled: !reading}) : I("Connect", () => S.prefs.port ? op("connect") : dlgPrefs()),
       I("Instrument Terminal…", dlgTerminal, {enabled: conn && !reading}), I("Instrument Error Log…", dlgErrorLog, {enabled: conn && !reading}), "-",
+      I("Find Reader\u2026", async () => { const f = await dlgFindReader(); if (f) await op("prefs", Object.assign({}, S.prefs, {port: f.port, reader: f.reader})); }, {enabled: !reading}), "-",
       I("Factory Service: ADC Diagnostic…", () => dlgService("diagnostic"), {enabled: conn && !reading && canDo("service")}),
       I("Factory Service: Alignment…", () => dlgService("align"), {enabled: conn && !reading && canDo("service")})]],
   ];

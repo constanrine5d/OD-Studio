@@ -104,3 +104,60 @@ def open_reader(port: str, *, kind: str = "auto", filters=(), trace=None, displa
             return filter_reader(None)
         except SpectraMaxError:
             raise first from None
+
+
+def probe_port(port: str, *, filters=(), timeout: float = 0.5) -> Optional[str]:
+    """Which reader, if any, answers on ``port``.  Returns its model name or None.
+
+    Kept as gentle as possible, since a lab computer may have other instruments on its
+    serial ports: the port is opened exclusively (a port another program uses is left
+    alone), then a single carriage return is sent.  An older filter reader echoes it and
+    is identified with VER; a SpectraMax answers it with an OK block.  Only if nothing
+    answered is ``!<CR>`` tried, the SpectraMax's own "are you there".  A device that
+    answers neither gets nothing else.
+    """
+    import time as _time
+    from .errors import SpectraMaxError
+    from .tmax import MODEL_NAMES, TMaxReader
+    from .transport import open_transport
+
+    def listen(tx, seconds: float) -> bytes:
+        got = b""
+        end = _time.monotonic() + seconds
+        while _time.monotonic() < end:
+            got += tx.read(0.05)
+            if got.endswith(b">") or got == b"\r":
+                break
+        return got
+
+    try:
+        tx = open_transport(port, **({} if port.lower().startswith("sim") else {"exclusive": True}))
+    except SpectraMaxError:
+        return None
+    try:
+        tx.reset_input()
+        tx.write(b"\r")
+        got = listen(tx, timeout)
+        if got[:1] in (b"\r", b"\x07"):                    # echo (or a complaint): older reader
+            r = TMaxReader(port, transport=tx, filters=filters)
+            try:
+                model, _ = r._identify()
+                return MODEL_NAMES[model]
+            except SpectraMaxError:
+                return None
+        if b"OK" not in got.upper():
+            tx.reset_input()
+            tx.write(b"!\r")
+            got = listen(tx, timeout)
+        if b"OK" in got.upper():
+            tx.reset_input()
+            tx.write(b"!OPTION\r")                         # read-only: the model name
+            text = (listen(tx, timeout) + listen(tx, timeout)).decode("latin-1")
+            name = [ln.strip() for ln in text.replace(">", "\n").splitlines()
+                    if ln.strip() and not ln.strip().upper().startswith("OK")]
+            return name[0] if name else "SpectraMax"
+        return None
+    except SpectraMaxError:
+        return None
+    finally:
+        tx.close()

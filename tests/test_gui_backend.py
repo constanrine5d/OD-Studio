@@ -648,3 +648,58 @@ def test_adc_diagnostic_layout():
     g = SpectraMax.parse_adc_diag("\r\n".join(lines))
     assert g[3][:8] == [11, 12, 13, 14, 15, 16, 17, 18]
     assert [g[5][9], g[5][10], g[5][11]] == [1, 2, 3] and g[6][9] is None and g[0][8] is None
+
+
+def test_port_and_reader_survive_a_restart(tmp_path, monkeypatch):
+    monkeypatch.setenv("ODSTUDIO_HOME", str(tmp_path / "home"))
+    a = App(port=None)
+    a.op("prefs", {"port": "sim:vmax", "reader": "vmax", "filters": [405, 0, 0, 0, 0, 650]})
+    a.inst._alive = False
+    a.inst.disconnect()
+    b = App(port=None)                                  # a new start of the program
+    for _ in range(100):
+        if b.inst.info["connected"]:
+            break
+        time.sleep(0.02)
+    try:
+        assert b.prefs["port"] == "sim:vmax" and b.prefs["reader"] == "vmax"
+        assert b.inst.info["connected"] and b.inst.info["model"] == "Vmax"
+    finally:
+        b.inst._alive = False
+        b.inst.disconnect()
+    c = App(port="sim")                                 # a one-off command-line port ...
+    c.op("prefs", {"autosave": True})                   # ... and some other change saved
+    c.inst._alive = False
+    c.inst.disconnect()
+    assert json.loads((tmp_path / "home" / "prefs.json").read_text())["port"] == "sim:vmax"
+
+
+def test_reconnects_when_the_adapter_moves(tmp_path, monkeypatch):
+    from odstudio.gui import app as appmod
+    monkeypatch.setenv("ODSTUDIO_HOME", str(tmp_path / "home"))
+    (tmp_path / "home").mkdir()
+    (tmp_path / "home" / "prefs.json").write_text(json.dumps(
+        {"port": "/dev/ttyUSB9", "port_id": {"vid": 1, "pid": 2, "serial_number": "X"}}))
+    monkeypatch.setattr(appmod, "find_port", lambda ident: "sim:emax" if ident.get("serial_number") == "X" else None)
+    a = App(port=None)
+    for _ in range(150):
+        if a.inst.info["connected"]:
+            break
+        time.sleep(0.02)
+    try:
+        assert a.inst.info["connected"] and a.inst.info["model"] == "Emax"
+        assert a.prefs["port"] == "sim:emax"
+        for _ in range(50):                             # the note is written right after connecting
+            if any("now sim:emax (was /dev/ttyUSB9)" in ln for ln in a.op("activity_log", {})["lines"]):
+                break
+            time.sleep(0.02)
+        assert any("now sim:emax (was /dev/ttyUSB9)" in ln for ln in a.op("activity_log", {})["lines"])
+    finally:
+        a.inst._alive = False
+        a.inst.disconnect()
+
+
+def test_find_readers(app):
+    r = app.op("find_readers", {"ports": ["sim", "sim:thermomax"]})["results"]
+    assert r[0]["reader"] in ("Simulator",) and r[0]["note"] == "connected now"
+    assert r[1]["reader"] == "ThermoMax"

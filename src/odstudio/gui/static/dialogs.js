@@ -254,6 +254,49 @@ function readerCaps() {
   return i && i.connected && i.options && i.options.modes ? i.options : null;
 }
 
+/* Find Reader: ask the ports the user ticks, gently, whether a plate reader answers.
+   Resolves to {port, reader} for the chosen one, or null. */
+const READER_KIND = {ThermoMax: "thermomax", UVmax: "uvmax", Vmax: "vmax", Emax: "emax"};
+async function dlgFindReader() {
+  const ports = ((await op("ports", {}, {quiet: true})) || {ports: []}).ports;
+  const boxes = ports.map(p => {
+    const c = check(p.device + (p.description ? " — " + p.description : "") + (p.usb ? "  (USB adapter)" : ""), p.suggest);
+    c.port = p.device;
+    return c;
+  });
+  const sims = check("Simulators too (for trying OD Studio without a reader)", false);
+  const results = h("div", {"aria-live": "polite"});
+  let chosen = null;
+  const body = h("div", {class: "form"},
+    h("p", {}, "OD Studio asks each ticked port whether a SpectraMax, ThermoMax, UVmax, Vmax or Emax is there. It sends only a carriage return (and, if nothing answered, the SpectraMax's own \u201c!\u201d check) and stops at the first sign that a device is not a reader."),
+    h("p", {class: "hint"}, "Other instruments on this computer: untick their ports, or close their software first. A port another program is using is skipped. USB adapters and built-in serial ports are ticked to begin with; Bluetooth devices are not."),
+    ports.length ? h("fieldset", {}, h("legend", {}, "Serial ports"), boxes) : h("p", {class: "hint bad"}, "No serial ports found. Plug in the reader's USB-to-serial adapter and try again."),
+    sims, results);
+  return modal("Find Reader", body, [
+    {label: "Cancel", value: null},
+    {label: "Search", action: async () => {
+      const list = boxes.filter(b => b.box.checked).map(b => b.port)
+        .concat(sims.box.checked ? ["sim", "sim:thermomax", "sim:vmax", "sim:uvmax", "sim:emax"] : []);
+      if (!list.length) { toast("Tick at least one port."); return false; }
+      fill(results, h("p", {class: "hint"}, "Searching\u2026"));
+      const r = await op("find_readers", {ports: list}, {quiet: true});
+      const rows = (r && r.results) || [];
+      const found = rows.filter(x => x.reader);
+      chosen = found.length === 1 ? found[0] : null;
+      fill(results, h("fieldset", {}, h("legend", {}, "Results"),
+        rows.map(x => x.reader
+          ? h("label", {class: "check"}, h("input", {type: "radio", name: "found", checked: found.length === 1, onchange: () => { chosen = x; }}),
+              ` ${x.port}: ${x.reader}` + (x.note ? ` (${x.note})` : ""))
+          : h("div", {class: "muted"}, `${x.port}: ${x.note}`)),
+        found.length ? null : h("p", {class: "hint bad"}, "No reader answered. Check that it is switched on and its cable is plugged in.")));
+      return false;
+    }},
+    {label: "Use Selected", primary: true, action: () => {
+      if (!chosen) { toast(results.textContent ? "Choose one of the readers found." : "Search first."); return false; }
+      return {port: chosen.port, reader: READER_KIND[chosen.reader] || "auto"};
+    }}], {cls: "wide", noFocus: true});
+}
+
 async function dlgIncubator() {
   const on = S.instrument.setpoint > 0;
   const temp = numInput(on ? S.instrument.setpoint : 37, {class: "narrow", step: 0.1});
@@ -268,7 +311,7 @@ async function dlgPrefs() {
   const ports = (await op("ports", {}, {quiet: true}) || {ports: []}).ports;
   const portOpts = [["", "(not connected)"], ["sim", "Simulator (no instrument needed)"], ["sim:realtime", "Simulator, realistic timing"],
     ["sim:thermomax", "Simulator: ThermoMax"], ["sim:vmax", "Simulator: Vmax"], ["sim:uvmax", "Simulator: UVmax"], ["sim:emax", "Simulator: Emax"]]
-    .concat(ports.map(p => [p.device, p.device + (p.description && p.description !== "n/a" ? " — " + p.description : "")]));
+    .concat(ports.map(p => [p.device, p.device + (p.description ? " — " + p.description : "")]));
   if (P.port && !portOpts.some(o => o[0] === P.port)) portOpts.push([P.port, P.port]);
   const port = select(portOpts, P.port);
   const custom = textInput("", {placeholder: "or type a port, e.g. COM3 or socket://host:port"});
@@ -292,7 +335,14 @@ async function dlgPrefs() {
   const filt = [0, 1, 2, 3, 4, 5].map(i => numInput((P.filters || [])[i] || "", {class: "narrow", step: 1, placeholder: "none", "aria-label": "Filter position " + (i + 1)}));
   const reader = select([["auto", "Automatic"], ["spectramax", "SpectraMax 250"], ["thermomax", "ThermoMax"], ["uvmax", "UVmax"], ["vmax", "Vmax"], ["emax", "Emax"]], P.reader || "auto", {"aria-label": "Reader type"});
   const body = h("div", {class: "form"},
-    h("fieldset", {}, h("legend", {}, "Instrument"), field("Reader:", reader, "Automatic finds out which reader is connected"), field("Serial Port:", port), custom,
+    h("fieldset", {}, h("legend", {}, "Instrument"), field("Reader:", reader, "Automatic finds out which reader is connected"),
+      h("div", {class: "row"}, field("Serial Port:", port), h("button", {type: "button", onclick: async () => {
+        const f = await dlgFindReader();
+        if (!f) return;
+        if (![...port.options].some(o => o.value === f.port)) port.append(h("option", {value: f.port}, f.port));
+        port.value = f.port; custom.value = ""; reader.value = f.reader;
+        toast(`Found on ${f.port}. Press OK to use it.`);
+      }}, "Find Reader\u2026")), custom,
       h("label", {class: "check"}, chk("autoconnect"), " Connect when the program starts"),
       h("label", {class: "check"}, chk("open_drawer_after_read"), " Open the drawer when a reading finishes")),
     h("fieldset", {}, h("legend", {}, "After a reading"),

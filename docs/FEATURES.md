@@ -213,4 +213,5 @@ Chosen from SoftMax Pro 7's feature list; all covered by the tests in `tests/`.
 | Live Well Graph while a kinetic or spectrum read runs | Plate (Well Graph) |
 | Zoom and pan in every graph (box zoom, Shift-drag, ⌘/Ctrl-scroll or pinch, +/−, Reset) | Graph sections, Well Graph |
 | Works in narrow windows and on phone-sized screens | everywhere |
+| Find Reader: asks the ports you choose whether a reader is there; remembers the reader's USB adapter and finds it again under a new port name | Control › Find Reader…, Edit › Preferences |
 | The older ThermoMax, UVmax, Vmax and Emax filter readers (found automatically; not yet tried on real hardware) | Edit › Preferences › Reader, Filters |

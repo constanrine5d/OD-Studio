@@ -17,6 +17,8 @@ const HELP = [
   ["Connecting the reader", `
 <p>Connect the reader's serial port to the computer. A USB-to-RS-232 adapter works. Then choose the port in Edit &gt; Preferences &gt; Serial Port. The link runs at 9600 baud, 8 data bits, no parity, 1 stop bit.</p>
 <p>The status bar shows a green dot and the instrument name when it is connected. A red dot means no instrument. Hover over it to see why.</p>
+<p><b>Find Reader</b> (Control menu, or the button next to Serial Port in Preferences) asks the serial ports you tick whether a reader is there. It sends only a carriage return, plus the SpectraMax's own "!" check if nothing answered, and stops at the first sign a device is not a reader. USB adapters and built-in serial ports are ticked to begin with, Bluetooth devices are not; untick ports that belong to other instruments. Ports another program is using are skipped.</p>
+<p>OD Studio remembers the port, the reader type and the reader's USB adapter. At the next start it connects by itself, and if the adapter now has another name (another USB socket, a new COM number) it finds the same adapter again. It never searches other ports on its own.</p>
 <p>To try the program without a reader, choose <b>Simulator</b> as the port. It answers like a SpectraMax 250 and produces made-up absorbance values (there are simulators of the older readers too). "Simulator, realistic timing" makes reads take as long as a real plate.</p>
 <p>If nothing answers: check that the reader is switched on, then check the cable type (straight-through or null-modem). Control &gt; Instrument Terminal sends raw commands, and Control &gt; Instrument Error Log shows the reader's own errors.</p>`],
   ["Factory service modes", `

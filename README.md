@@ -80,13 +80,19 @@ are the most trouble-free).
    | macOS | In Terminal, run `ls /dev/cu.*` before and after plugging the adapter in: the new entry is the reader.<br>Pick the `cu.` name (there is also a `tty.` one).<br>Nothing new? Install the driver from the adapter's maker. | `/dev/cu.usbserial-…` |
    | Linux | Right after plugging in, `sudo dmesg \| tail` shows *attached to ttyUSB0*.<br>A name that never changes: `ls /dev/serial/by-id/`.<br>Allow access once: `sudo usermod -aG dialout $USER` (`uucp` on Arch), then log out and back in. | `/dev/ttyUSB0` |
 
+   **Easiest:** **Control › Find Reader…** asks the ports you tick whether a reader is there and
+   fills in the port and reader type. It only ticks USB adapters to begin with; untick any port
+   that belongs to another instrument.
+
    **Not sure which one is the reader?** Unplug the adapter and open **Edit › Preferences**: the
    **Serial Port** list shows the ports the computer has now. Close it, plug the adapter in, and
    open Preferences again. The new entry is the reader. If nothing new appears, install the
    adapter's driver.
 
 3. In OD Studio, open **Edit › Preferences**, pick the port under **Serial Port**, and click OK.
-   The status bar shows the instrument and its temperature when it answers.
+   The status bar shows the instrument and its temperature when it answers. OD Studio remembers
+   the port, the reader and its USB adapter: next time it connects by itself, even if the adapter
+   is in another USB socket and the port name has changed.
 4. Put an empty plate in and do a first **Read** to check that everything works.
 
 **If the reader does not answer**, check that it is switched on and that the port is right, then

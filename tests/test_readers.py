@@ -28,3 +28,24 @@ def test_minimum_kinetic_interval():
     caps = capabilities("Vmax", modes=["endpoint", "kinetic"], min_interval=8)
     assert "at least 8 s" in unsupported(caps, ReadSettings("kinetic", (405,), interval=5, reads=3))
     assert unsupported(caps, ReadSettings("kinetic", (405,), interval=8, reads=3)) is None
+
+
+def test_probe_identifies_each_simulated_reader():
+    from odstudio.readers import probe_port
+    assert probe_port("sim") == "Simulator"
+    assert [probe_port(f"sim:{m}") for m in ("thermomax", "uvmax", "vmax", "emax")] == \
+        ["ThermoMax", "UVmax", "Vmax", "Emax"]
+
+
+def test_find_port_follows_the_adapter(monkeypatch):
+    from odstudio import transport
+    ports = [{"device": "COM7", "description": "USB Serial Port", "usb": True, "vid": 0x403, "pid": 0x6001,
+              "serial_number": "A10K4XYZ", "location": "1-2"},
+             {"device": "COM8", "description": "USB Serial Port", "usb": True, "vid": 0x403, "pid": 0x6001,
+              "serial_number": "OTHER", "location": "1-3"}]
+    monkeypatch.setattr(transport, "list_ports_info", lambda: ports)
+    ident = {"vid": 0x403, "pid": 0x6001, "serial_number": "A10K4XYZ", "description": "USB Serial Port"}
+    assert transport.find_port(ident) == "COM7"
+    # without a serial number, the same adapter type counts only if it is the only one
+    assert transport.find_port(dict(ident, serial_number="")) is None
+    assert transport.port_identity("COM8")["serial_number"] == "OTHER"

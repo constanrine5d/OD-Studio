@@ -24,9 +24,9 @@ from ..driver import ReadSettings, SpectraMax
 from ..errors import SpectraMaxError
 from ..fits import FIT_KINDS, FIT_LABELS
 from ..formula import FUNCTIONS, check as check_formula
-from ..readers import READER_KINDS, open_reader, unsupported
+from ..readers import READER_KINDS, open_reader, probe_port, unsupported
 from ..tmax import min_interval as tmax_min_interval
-from ..transport import list_ports
+from ..transport import find_port, list_ports_info, port_identity
 
 DATA_EXT = ".odx"
 OLD_DATA_EXT = ".smx"           # before the rename to OD Studio; still opened
@@ -123,7 +123,7 @@ def config_dir() -> Path:
 def default_prefs() -> dict:
     docs = Path.home() / "Documents" / "OD Studio"
     return {
-        "port": "", "reader": "auto", "autoconnect": True,
+        "port": "", "port_id": None, "reader": "auto", "autoconnect": True,
         "autosave": False, "autosave_folder": str(docs), "autosave_prefix": "Data",
         "autoprint": False,
         "default_protocol": False, "default_protocol_path": "",
@@ -148,6 +148,7 @@ class Instrument:
         self.lock = threading.RLock()
         self.sm: Optional[SpectraMax] = None
         self.reader_options: Callable[[], dict] = lambda: {}
+        self.on_connected: Optional[Callable[[str], None]] = None
         self.info = {"connected": False, "port": "", "model": "", "version": "", "error": "",
                      "temperature": None, "setpoint": 0.0, "drawer": "", "state": "",
                      "options": None, "shaking": False}
@@ -173,6 +174,8 @@ class Instrument:
             self.info.update(connected=True, port=port, model=info.model or caps["model"],
                              version=info.version, error="", shaking=False, options=caps)
             self._refresh()
+        if self.on_connected:
+            self.on_connected(port)
         self.changed()
 
     def disconnect(self) -> None:
@@ -313,8 +316,8 @@ class App:
                 self.prefs.update(json.loads((config_dir() / "prefs.json").read_text()))
             except (OSError, ValueError):
                 pass
-        if port is not None:
-            self.prefs["port"] = port
+        # a port given on the command line is used this time only, never saved
+        self.port_override = port
         self._tl = threading.local()
         self.docs: dict = {}
         self.order: list = []
@@ -328,7 +331,8 @@ class App:
         self.workflow = W.Runner(self)
         self.activity(f"OD Studio {__version__} started")
         self._new_from_default(new_window=True)
-        if self.prefs["port"] and self.prefs.get("autoconnect", True):
+        self.inst.on_connected = self._remember_adapter
+        if (port or self.prefs["port"]) and (port or self.prefs.get("autoconnect", True)):
             threading.Thread(target=self._autoconnect, daemon=True).start()
 
     # ------------------------------------------------------------ plumbing
@@ -347,10 +351,42 @@ class App:
         self._bump()
 
     def _autoconnect(self) -> None:
+        """Connect to the saved port; if the reader's USB adapter now has another name
+        (another USB socket, a new COM number), find the same adapter and use that."""
+        if self.port_override is not None:
+            try:
+                self.inst.connect(self.port_override)
+            except UserError:
+                pass
+            return
+        saved = self.prefs["port"]
         try:
-            self.inst.connect(self.prefs["port"])
-        except UserError:
-            pass
+            self.inst.connect(saved)
+            return
+        except UserError as e:
+            first = e
+        moved = find_port(self.prefs.get("port_id") or {})
+        if moved and moved != saved:
+            try:
+                self.inst.connect(moved)
+            except UserError:
+                return
+            self.activity(f"The reader's USB adapter is now {moved} (was {saved})")
+            self.prefs["port"] = moved
+            self.save_prefs()
+            self.event("message", f"Found the reader on {moved} (it was on {saved}).")
+            self._bump()
+        else:
+            self.inst.info["error"] = str(first)
+
+    def _remember_adapter(self, port: str) -> None:
+        """After a successful connection, note which adapter it was (for _autoconnect)."""
+        if self.port_override is not None or port != self.prefs.get("port"):
+            return
+        ident = port_identity(port)
+        if ident and ident != self.prefs.get("port_id"):
+            self.prefs["port_id"] = ident
+            self.save_prefs()
 
     def event(self, kind: str, text: str = "", **kw) -> None:
         self._event_id += 1
@@ -900,6 +936,7 @@ class App:
             and self.inst.info.get("options", {}) and (self.inst.info["options"] or {}).get("family") == "tmax")
         if port_changed:
             self._busy()
+            self.port_override = None          # the user's choice wins over a command-line port
         self.prefs.update(changes)
         self.save_prefs()
         self._bump()
@@ -907,7 +944,21 @@ class App:
             self.inst.connect(self.prefs["port"])
 
     def op_ports(self):
-        return {"ports": [{"device": d, "description": desc} for d, desc in list_ports()]}
+        return {"ports": list_ports_info()}
+
+    def op_find_readers(self, ports: list):
+        """Ask each chosen port, gently, whether a reader is there (readers.probe_port)."""
+        out = []
+        for port in ports:
+            port = str(port)
+            if self.inst.info.get("connected") and self.inst.info.get("port") == port:
+                out.append({"port": port, "reader": self.inst.info.get("model"), "note": "connected now"})
+                continue
+            found = probe_port(port, filters=self.prefs.get("filters") or [])
+            out.append({"port": port, "reader": found,
+                        "note": "" if found else "no reader answered (or the port is in use)"})
+        self.activity("Find Reader: " + "; ".join(f"{r['port']}: {r['reader'] or 'none'}" for r in out))
+        return {"results": out}
 
     # ------------------------------------------------------- plate: settings
     def op_instrument_settings(self, id, settings: dict, confirm: bool = False):

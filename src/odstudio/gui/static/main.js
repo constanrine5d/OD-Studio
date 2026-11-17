@@ -163,7 +163,9 @@ function menuDefs() {
       I("Incubator…", dlgIncubator, {enabled: conn && !reading && canDo("temperature")}),
       I("Automix (shake now)", () => op("shake"), {enabled: conn && !reading && canDo("shake"), checked: S.instrument.shaking}), "-",
       conn ? I("Disconnect", () => op("disconnect"), {enabled: !reading}) : I("Connect", () => S.prefs.port ? op("connect") : dlgPrefs()),
-      I("Instrument Terminal…", dlgTerminal, {enabled: conn && !reading}), I("Instrument Error Log…", dlgErrorLog, {enabled: conn && !reading})]],
+      I("Instrument Terminal…", dlgTerminal, {enabled: conn && !reading}), I("Instrument Error Log…", dlgErrorLog, {enabled: conn && !reading}), "-",
+      I("Factory Service: ADC Diagnostic…", () => dlgService("diagnostic"), {enabled: conn && !reading && canDo("service")}),
+      I("Factory Service: Alignment…", () => dlgService("align"), {enabled: conn && !reading && canDo("service")})]],
   ];
   if (plate) defs.push(["Plate", [
     I("Template…", () => dlgTemplate(plate.id)), I("Reduction…", () => dlgReduction(plate.id)), "-",

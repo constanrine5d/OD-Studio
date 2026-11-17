@@ -19,6 +19,11 @@ const HELP = [
 <p>The status bar shows a green dot and the instrument name when it is connected. A red dot means no instrument. Hover over it to see why.</p>
 <p>To try the program without a reader, choose <b>Simulator</b> as the port. It answers like a SpectraMax 250 and produces made-up absorbance values (there are simulators of the older readers too). "Simulator, realistic timing" makes reads take as long as a real plate.</p>
 <p>If nothing answers: check that the reader is switched on, then check the cable type (straight-through or null-modem). Control &gt; Instrument Terminal sends raw commands, and Control &gt; Instrument Error Log shows the reader's own errors.</p>`],
+  ["Factory service modes", `
+<p>Control &gt; Factory Service holds the two service commands the original program offered only on Molecular Devices' own test stations. They are for troubleshooting, not for everyday use, and have not been tried on a real reader with OD Studio.</p>
+<ul><li><b>ADC Diagnostic</b> shows the raw readings of the reader's detector. It should only read.</li>
+<li><b>Alignment</b> runs the factory alignment routine. <b>It may change the reader's stored alignment</b>, and a wrong result can make all later readings wrong until the reader is serviced. Do not run it on a reader that works properly. You have to confirm a warning before it runs.</li></ul>
+<p>Take the plate out first. Both are recorded in the activity log. They exist on the SpectraMax only.</p>`],
   ["Older readers (ThermoMax, UVmax, Vmax, Emax)", `
 <p>Besides the SpectraMax 250, OD Studio drives the older Molecular Devices filter readers. With <b>Reader: Automatic</b> in Edit &gt; Preferences it finds out which one is connected, as the original program did; you can also choose the type yourself.</p>
 <p>These readers measure through a wheel of up to six filters and cannot tell the computer which are fitted. Enter them in Edit &gt; Preferences &gt; Filters <i>by position</i> (1 to 6), leaving empty positions blank. Instrument Settings then offers only those wavelengths.</p>

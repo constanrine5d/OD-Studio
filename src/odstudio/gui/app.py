@@ -84,6 +84,8 @@ LOGGED = {
                                     if a.get("on") else "Incubator switched off"),
     "shake": lambda app, a, r: "Shaking started" if app.inst.info.get("shaking") else "Shaking stopped",
     "raw_command": lambda app, a, r: f"Sent command {a.get('command')!r}",
+    "service": lambda app, a, r: ("Factory service: ADC diagnostic" if a.get("action") == "diagnostic"
+                                  else f"Factory service: alignment (CALIGN), reply {r.get('text')!r}"),
     "stop": lambda app, a, r: "Stop pressed",
 }
 
@@ -1378,6 +1380,20 @@ class App:
 
     def op_raw_command(self, command: str):
         return {"reply": self.inst.call(lambda sm: sm.command(command)) or "OK"}
+
+    def op_service(self, action: str, acknowledged: bool = False):
+        """Factory service modes (SOFTmax PRO's Normal / Diagnostic / Align, SPF.EXE seg70)."""
+        if not self.inst.can("service"):
+            raise UserError(f"The {self.inst.info['model']} has no factory service commands.")
+        if action == "diagnostic":
+            text = self.inst.call(lambda sm: sm.adc_diagnostic())
+            return {"text": text, "grid": SpectraMax.parse_adc_diag(text)}
+        if action == "align":
+            if not acknowledged:
+                raise UserError("Alignment can change the reader's calibration. Confirm the warning first.")
+            text, value = self.inst.call(lambda sm: sm.align())
+            return {"text": text, "value": value}
+        raise UserError("Unknown service action.")
 
     def op_error_log(self, clear: bool = False):
         if clear:

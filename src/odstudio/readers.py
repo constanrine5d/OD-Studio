@@ -21,19 +21,21 @@ def capabilities(model: str, *, family: str = "spectramax", modes: Sequence[str]
                  wl_min: int = 250, wl_max: int = 750, temperature: bool = True,
                  temp_min: float = 15.0, temp_max: float = 45.0, shake: bool = True,
                  calibrate: bool = True, column_range: bool = True,
-                 min_interval: Optional[int] = None) -> dict:
+                 min_interval: Optional[int] = None, service: bool = False) -> dict:
     """Describe a reader.
 
     ``filters``       fixed filter wavelengths in nm, or None for a monochromator
     ``column_range``  whether a block of columns (strips) can be read instead of the whole plate
     ``min_interval``  shortest kinetic interval in seconds, None if it depends on the read
+    ``service``       the factory service commands (ADC diagnostic, alignment) exist
     """
     return {"model": model, "family": family, "modes": list(modes),
             "max_wavelengths": max_wavelengths,
             "filters": sorted(int(f) for f in filters) if filters is not None else None,
             "wl_min": wl_min, "wl_max": wl_max, "temperature": temperature,
             "temp_min": temp_min, "temp_max": temp_max, "shake": shake,
-            "calibrate": calibrate, "column_range": column_range, "min_interval": min_interval}
+            "calibrate": calibrate, "column_range": column_range, "min_interval": min_interval,
+            "service": service}
 
 
 def unsupported(caps: dict, rs) -> Optional[str]:

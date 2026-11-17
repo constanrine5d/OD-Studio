@@ -258,3 +258,6 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .zoomwrap { position: relative; } .zoomplot { position: relative; cursor: crosshair; }
 .zoombox { position: absolute; display: none; border: 1px dashed var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); pointer-events: none; }
 .zoombar { display: flex; gap: 4px; align-items: center; margin-top: 2px; } .zoombar .tb { min-width: 30px; } .zoomhint { font-size: 12px; margin-left: 6px; }
+
+.service-warning { border-left: 4px solid #d92d20; background: color-mix(in srgb, #d92d20 8%, transparent); padding: 8px 12px; border-radius: 6px; }
+.service-warning p { margin: 6px 0; }

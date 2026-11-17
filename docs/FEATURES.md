@@ -16,7 +16,7 @@ against a real instrument yet (see `README.md`).
 |---|---|---|
 | Open old SOFTmax (DOS-era) `.dat` / `.pro` files | ❌ | No sample files to work from. |
 | Readers other than the SPECTRAmax (Emax, Vmax, UVmax, THERMOmax) | ✅ | Found automatically, or chosen in Preferences › Reader. Not yet tried on real hardware; see [PROTOCOL-TMAX.md](PROTOCOL-TMAX.md). |
-| Normal / Diagnostic / Align popup in Instrument Settings | ❌ | Factory service modes. |
+| Normal / Diagnostic / Align popup in Instrument Settings | ✅ | Control › Factory Service: ADC Diagnostic / Alignment, behind warnings (Alignment needs an explicit acknowledgement). Not tried on a real reader. |
 | Registration dialog, serial-number check | ❌ | Not needed. |
 
 ## File menu

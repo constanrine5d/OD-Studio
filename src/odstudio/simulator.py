@@ -245,6 +245,9 @@ class FlashSimulator:
             return ok, ""
         name, args = self._split(line)
         self._body = ""
+        if name in ("CALIGN", "ADC_DIAG") and not self.faithful:
+            self._body = self._service(name)        # factory commands (SPF.EXE seg70)
+            return ok, self._body
         idx = _INDEX.get(name, -1)
         err = E_UNKNOWN if idx < 0 else self._dispatch(name, args)
         if err:
@@ -535,6 +538,27 @@ class FlashSimulator:
             self.remote = a[0] == "ON"
         return 0
 
+    # --- factory service commands --------------------------------------------
+    def _service(self, name: str) -> str:
+        """Replies to the factory commands the host's test interface sends (seg70).
+
+        The original simulator does not know them and their real reply format is not
+        documented: these replies are invented so the program can be tried."""
+        if name == "CALIGN":
+            return "ALIGN 0.00 OK\r"
+        # Laid out exactly as the host parses it (driver.parse_adc_diag); the labels and
+        # numbers are invented.
+        lines = ["ADC DIAGNOSTIC (simulated)"]
+        w = (8, 8, 7, 7, 9, 9, 9, 9)
+        for ch in range(8):
+            vals = [30000 - 40 * (k + ch) + self.rng.randint(-25, 25) for k in range(8)]
+            label = f"{ch + 1} "
+            lines.append(label + "".join(f"{vals[k]:{w[k]}d}" for k in (0, 2, 4, 6)))
+            lines.append(label + "".join(f"{vals[k]:{w[k]}d}" for k in (1, 3, 5, 7)))
+        for i, label in enumerate(("D1", "D2", "D3", "D4", "R1 ", "R2 ")):
+            lines.append(label + f"{1000 + i:8d}{2000 + i:8d}{300 + i:7d}")
+        return "\r\n".join(lines) + "\r\n"
+
     # --- commands the original leaves "not implemented" ---------------------
     def _extra(self, name: str, a: list) -> int:
         if name == "SHAKE":
@@ -595,6 +619,11 @@ class WireSession:
         if line.strip("! \t").upper() == "RESEND":
             return self._last
         status, body = self.sim.process(line)
+        if line.strip("! \t").upper() == "ADC_DIAG" and body:
+            # the factory host reads this reply as one data block with no status first
+            # (SPF.EXE seg70:0f6c), so it comes alone
+            self._last = (self.lead + body + ">").encode("latin-1")
+            return self._last
         text = status + "\r>"
         if body:
             text += self.lead + body + ">"

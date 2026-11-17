@@ -770,6 +770,38 @@ async function dlgTerminal() {
     [{label: "Close", value: null}, {label: "Send", primary: true, action: send}], {cls: "wide"});
 }
 
+/* Factory service modes (SOFTmax PRO's Normal / Diagnostic / Align), with warnings. */
+async function dlgService(action) {
+  const align = action === "align";
+  const ack = check(align ? "I understand that this may change my reader's calibration, and I accept the risk." : "I understand this is a factory service command.", false);
+  const warn = h("div", {class: "service-warning", role: "alert"},
+    h("p", {}, h("b", {}, align ? "Warning: this can change your instrument." : "Warning: factory service command.")),
+    align
+      ? h("div", {},
+          h("p", {}, "Alignment runs the reader's factory alignment routine (command CALIGN). It may move the optics and store new alignment values in the reader's memory. If the result is wrong, the reader can give wrong readings until it is serviced."),
+          h("p", {}, "It was meant for Molecular Devices technicians during manufacture and repair. Do not run it on a reader that works properly. It has not been tried on a real instrument with OD Studio, and its reply is not documented. It can take up to 2 minutes; take the plate out first."))
+      : h("div", {},
+          h("p", {}, "ADC Diagnostic asks the reader for the raw readings of its detector (command ADC_DIAG). It was meant for Molecular Devices technicians, and the format of its reply is not documented."),
+          h("p", {}, "It should only read, not change anything, but this has not been checked on a real instrument. Take the plate out first, and use it only if you know why you need it.")),
+    ack);
+  const go = await modal(align ? "Factory Service: Alignment" : "Factory Service: ADC Diagnostic", warn,
+    [{label: "Cancel", value: null},
+     {label: align ? "Run Alignment" : "Run Diagnostic", danger: true, action: () => {
+       if (!ack.box.checked) { toast("Tick the box to confirm first."); return false; }
+       return true;
+     }}], {noFocus: true});
+  if (!go) return;
+  const r = await op("service", {action, acknowledged: true});
+  if (!r) return;
+  const grid = r.grid ? h("table", {class: "grouptable"}, h("tr", {}, h("th", {}, ""), [...Array(12).keys()].map(c => h("th", {}, c + 1))),
+    r.grid.map((row, i) => h("tr", {}, h("th", {}, ROWS[i]), row.map(v => h("td", {}, v === null ? "" : String(v)))))) : null;
+  return modal(align ? "Alignment Result" : "ADC Diagnostic Result", h("div", {},
+    align && r.value !== null && r.value !== undefined ? h("p", {}, "Value: ", h("b", {}, String(r.value))) : null,
+    grid, h("p", {class: "hint"}, "Reply from the reader:"), h("pre", {class: "termlog"}, r.text || "(empty)")),
+    [{label: "Copy", action: () => { navigator.clipboard && navigator.clipboard.writeText(r.text || ""); toast("Copied."); return false; }},
+     {label: "Close", primary: true, value: null}], {cls: "wide", noFocus: true});
+}
+
 async function dlgErrorLog() {
   const r = await op("error_log", {}, {quiet: true});
   if (!r) return;

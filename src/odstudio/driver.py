@@ -14,6 +14,7 @@ the original routines.
 from __future__ import annotations
 
 import math
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Callable, Iterable, Optional, Sequence, Union
@@ -135,7 +136,8 @@ class SpectraMax:
         o = self.info.options
         return capabilities(o.name or "SpectraMax 250", family="spectramax",
                             max_wavelengths=MAX_WAVELENGTHS, wl_min=o.wavelength_min,
-                            wl_max=o.wavelength_max, temp_min=o.temp_min, temp_max=o.temp_max)
+                            wl_max=o.wavelength_max, temp_min=o.temp_min, temp_max=o.temp_max,
+                            service=True)
 
     # ------------------------------------------------------------ lifecycle
     def __enter__(self) -> "SpectraMax":
@@ -260,6 +262,76 @@ class SpectraMax:
     def ping(self) -> None:
         """The empty command ``!\\r`` -- the instrument must answer OK (seg68:34ee)."""
         self._exchange("", False, max(PROBE_TIMEOUT, min(self.timeout, 1.0)))
+
+    # ------------------------------------------------- factory service modes
+    def adc_diagnostic(self, timeout: float = 60.0) -> str:
+        """Factory "Diagnostic" read: raw detector (ADC) readings as text.
+
+        SOFTmax PRO's factory test interface writes ``!ADC_DIAG<CR>`` as raw bytes and
+        reads the reply without the usual status check (SPF.EXE seg70:0f6c), so this
+        collects whatever arrives until the line goes quiet.  The format is undocumented.
+        """
+        self._tx.reset_input()
+        out = b"!ADC_DIAG\r"
+        self._log("->", out)
+        self._tx.write(out)
+        self._rx.clear()
+        for _ in range(2):
+            # one '>'-terminated block, first two characters dropped (seg68:3d87); should a
+            # status block come first after all, skip it and take the next
+            block = self._read_chunk("ADC_DIAG", timeout)
+            text = block[2:] if len(block) >= 2 else block
+            if not re.match(r"\s*(OK|FAIL)\b", block, re.I):
+                break
+        return text.replace("\r\n", "\n").replace("\r", "\n").strip("\n")
+
+    @staticmethod
+    def parse_adc_diag(text: str) -> list:
+        """The diagnostic reply as the host lays it on the plate (SPF.EXE seg70:135c).
+
+        Line 1 is a header.  Lines 2..17 are two lines per detector channel 1..8 (plate
+        row): a 2-character label, then the values for columns 1, 3, 5, 7 (first line) or
+        2, 4, 6, 8 (second line), 8, 7, 9 and 9 characters wide.  Lines 18..23 carry a
+        2, 2, 2, 2, 3 or 3-character label and three values 8, 8 and 7 wide, for rows 1..6,
+        columns 10..12.  Column 9 and rows 7..8 of columns 10..12 stay empty.  Fields are
+        read with strtod, so a field that is not a number counts as 0.
+        """
+        def num(field: str) -> float:
+            m = re.match(r"\s*([-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?)", field)
+            return float(m.group(1)) if m else 0.0
+
+        lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        lines += [""] * (24 - len(lines))
+        grid = [[None] * 12 for _ in range(8)]
+        widths = (2, 8, 8, 7, 7, 9, 9, 9, 9)
+        for r in range(8):
+            first, second = lines[1 + 2 * r][2:], lines[2 + 2 * r][2:]
+            for col in range(1, 9):
+                src = first if col % 2 else second
+                field, rest = src[:widths[col]], src[widths[col]:]
+                if col % 2:
+                    first = rest
+                else:
+                    second = rest
+                grid[r][col - 1] = num(field)
+        for i, skip in enumerate((2, 2, 2, 2, 3, 3)):
+            line = lines[17 + i][skip:]
+            for col, w in zip((10, 11, 12), (8, 8, 7)):
+                grid[i][col - 1], line = num(line[:w]), line[w:]
+        return grid
+
+    def align(self, timeout: float = 100.0) -> tuple:
+        """Factory "Align" (``CALIGN``, SPF.EXE seg70:0cc8).  Returns (reply text, value).
+
+        The host allows 6000 ticks (96 s) and keeps the second space-separated word of
+        the reply as a number.  It probably adjusts the reader's stored alignment."""
+        text = self.query("CALIGN", timeout=timeout).strip()
+        words = text.split()
+        try:
+            value = float(words[1]) if len(words) > 1 else None
+        except ValueError:
+            value = None
+        return text, value
 
     # ------------------------------------------------------- simple controls
     def set_remote(self, on: bool = True) -> None:

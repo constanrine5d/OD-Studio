@@ -216,6 +216,38 @@ SpectraMax (type 5). Otherwise the host falls back to the older instruments' ech
 (`VER`, `SHK`): `TH` → ThermoMax, `UV` → UVmax, `Em` → Emax, `SHK` accepted → Vmax. The full
 sequence and the older readers' protocol are in [PROTOCOL-TMAX.md](PROTOCOL-TMAX.md).
 
+## Factory service commands
+
+SOFTmax PRO only offers these when it runs as a factory test station (`CSTestInterface`,
+segment 70, interface type 7): the Instrument Settings popup *Normal / Diagnostic / Align*
+(menu 1126) picks what Read does (`70:0b16` → plate read type 1, 2 or 3).
+
+- **Diagnostic** (`70:0f6c`): drains the input, writes the raw bytes `!ADC_DIAG<CR>` and reads
+  **one** `>`-terminated block (first two characters dropped, `68:3d87`) with **no** status block
+  before it. The parser (`70:135c`) fixes the layout exactly **[code]**:
+
+  ```
+  line 1        header, ignored
+  lines 2..17   two lines per detector channel 1..8 (= plate row):
+                  2-char label + values for columns 1,3,5,7 (widths 8,7,9,9)
+                  2-char label + values for columns 2,4,6,8 (widths 8,7,9,9)
+  lines 18..23  label of 2,2,2,2,3,3 chars + three values (widths 8,8,7)
+                -> rows 1..6, columns 10..12
+  ```
+
+  Widths come from `DS:0e7c` (`2 8 8 7 7 9 9 9 9`) and `DS:0e8e` (`2 2 2 2 3 3`); each field
+  goes through `strtod` (so a non-number reads as 0) and is stored as one plate read. Column 9
+  and rows 7–8 of columns 10–12 are never filled: the reply is a table of eight values per
+  detector channel plus 18 other figures, drawn on the plate grid. What the values mean is
+  **[unknown]**.
+- **Align** (`70:0cc8`): sends `CALIGN` with a 6000-tick (96 s) timeout, reads the reply, keeps
+  the **second space-separated word** as a number (`strtod`) and stores it as a single value.
+  **[code]** What the reader does is **[unknown]**; the name and the later models' error 505
+  "NVRAM stage offset error" suggest it adjusts stored alignment, so OD Studio puts it behind an
+  explicit acknowledgement.
+- The original's built-in simulator does not know either command; OD Studio's simulator
+  answers with invented text so the feature can be tried.
+
 ## The built-in simulator
 
 `CSFlashSim` (segment 69) replaces the wire functions of `CSFlashInterface` with an in-memory

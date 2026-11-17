@@ -620,3 +620,31 @@ def test_files_and_settings_from_before_rename(app, tmp_path, monkeypatch):
     monkeypatch.setattr(appmod.Path, "home", classmethod(lambda cls: home))
     assert appmod.config_dir() == home / ".odstudio"
     assert json.loads((home / ".odstudio" / "prefs.json").read_text()) == {"port": "COM3"}
+
+
+def test_factory_service_modes(app):
+    with pytest.raises(UserError, match="Confirm the warning"):
+        app.op("service", {"action": "align"})
+    r = app.op("service", {"action": "align", "acknowledged": True})
+    assert r["value"] == 0.0 and "ALIGN" in r["text"]
+    r = app.op("service", {"action": "diagnostic"})
+    grid = r["grid"]
+    assert len(grid) == 8 and all(len(row) == 12 for row in grid)
+    assert all(grid[r][c] > 20000 for r in range(8) for c in range(8))     # 8 values per channel
+    assert grid[0][8] is None and grid[7][9] is None and grid[5][11] == 305  # layout of seg70:135c
+    assert "Factory service" in json.dumps(app.op("activity_log", {}))
+    assert app.state()["instrument"]["options"]["service"] is True
+
+
+def test_adc_diagnostic_layout():
+    """Fixed-width layout the original parses (SPF.EXE seg70:135c, widths at DS:0e7c / 0e8e)."""
+    from odstudio.driver import SpectraMax
+    lines = ["header"]
+    for ch in range(8):
+        odd = "".join(f"{v:{w}d}" for v, w in zip((11, 13, 15, 17), (8, 7, 9, 9)))
+        even = "".join(f"{v:{w}d}" for v, w in zip((12, 14, 16, 18), (8, 7, 9, 9)))
+        lines += [f"{ch}:" + odd, f"{ch}:" + even]
+    lines += [lab + f"{1:8d}{2:8d}{3:7d}" for lab in ("aa", "bb", "cc", "dd", "eee", "fff")]
+    g = SpectraMax.parse_adc_diag("\r\n".join(lines))
+    assert g[3][:8] == [11, 12, 13, 14, 15, 16, 17, 18]
+    assert [g[5][9], g[5][10], g[5][11]] == [1, 2, 3] and g[6][9] is None and g[0][8] is None

@@ -42,6 +42,10 @@ Then:
 | **macOS** | Double-click **`OD Studio.command`**. The first time, right-click it › **Open** › **Open** (macOS asks because it was downloaded). |
 | **Linux** | In a terminal in the folder: `bash "OD Studio.command"` |
 
+Prefer a single app? `python packaging/build.py` (after `pip install pyinstaller`) builds
+`OD Studio.app` (macOS), `OD Studio.exe` (Windows) or `OD Studio` (Linux) in `dist/`, with
+Python included. Quit it with File › Quit in its window.
+
 The program opens in your web browser. It runs only on your own computer and nothing is sent
 anywhere. To try it, choose **Edit › Preferences › Serial Port › Simulator**. **Help › OD Studio
 Help** explains each part.
